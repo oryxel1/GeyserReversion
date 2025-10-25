@@ -14,6 +14,21 @@ public class PacketUtil {
 
             return user.getCodec().tryDecode(user.getHelper(), decoded, user.getCloudburstCodec().getPacketDefinition(packet.getClass()).getId());
         } catch (Exception ignored) {
+            ignored.printStackTrace();
+            return null;
+        } finally {
+            decoded.release();
+        }
+    }
+
+    public static oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket toOxyOld(final GeyserTranslatedUser user, final BedrockPacket packet) {
+        final ByteBuf decoded = Unpooled.buffer();
+        try {
+            GeyserReversion.OLDEST_GEYSER_CODEC.tryEncode(user.getCloudburstLatestHelper(), decoded, packet);
+
+            return GeyserReversion.OLDEST_GEYSER_OXY_CODEC.tryDecode(user.getLatestHelper(), decoded, user.getCloudburstCodec().getPacketDefinition(packet.getClass()).getId());
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
             return null;
         } finally {
             decoded.release();
@@ -23,10 +38,11 @@ public class PacketUtil {
     public static BedrockPacket toCloudburstMCLatest(final GeyserTranslatedUser user, oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket packet) {
         final ByteBuf decoded = Unpooled.buffer();
         try {
-            GeyserReversion.OLDEST_GEYSER_OXY_CODEC.tryEncode(GeyserReversion.OXY_CODEC_HELPER, decoded, packet);
+            GeyserReversion.OLDEST_GEYSER_OXY_CODEC.tryEncode(user.getLatestHelper(), decoded, packet);
 
-            return GeyserReversion.OLDEST_GEYSER_CODEC.tryDecode(GeyserReversion.CODEC_HELPER, decoded, user.getCodec().getPacketDefinition(packet.getClass()).getId());
+            return GeyserReversion.OLDEST_GEYSER_CODEC.tryDecode(user.getCloudburstLatestHelper(), decoded, user.getCodec().getPacketDefinition(packet.getClass()).getId());
         } catch (Exception ignored) {
+            ignored.printStackTrace();
             return null;
         } finally {
             decoded.release();
@@ -40,6 +56,7 @@ public class PacketUtil {
 
             return user.getCloudburstCodec().tryDecode(user.getCloudburstHelper(), decoded, user.getCodec().getPacketDefinition(packet.getClass()).getId());
         } catch (Exception ignored) {
+            ignored.printStackTrace();
             return null;
         } finally {
             decoded.release();

@@ -49,15 +49,8 @@ import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_GLOBAL_
 import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_PACKET_LIMIT;
 
 public class GeyserReversion implements Extension {
-    public static BedrockCodec OLDEST_GEYSER_CODEC;
-    static {
-        OLDEST_GEYSER_CODEC = fixCodec(Bedrock_v818.CODEC);
-        CODEC_HELPER = OLDEST_GEYSER_CODEC.createHelper();
-    }
+    public static BedrockCodec OLDEST_GEYSER_CODEC = fixCodec(Bedrock_v818.CODEC);
     public static oxy.toviabedrock.shaded.protocol.bedrock.codec.BedrockCodec OLDEST_GEYSER_OXY_CODEC = oxy.toviabedrock.shaded.protocol.bedrock.codec.v818.Bedrock_v818.CODEC;
-
-    public static BedrockCodecHelper CODEC_HELPER;
-    public static oxy.toviabedrock.shaded.protocol.bedrock.codec.BedrockCodecHelper OXY_CODEC_HELPER = OLDEST_GEYSER_OXY_CODEC.createHelper();
 
     public static Map<Integer, BedrockCodec> OXY_CODEC_MAPPER = new HashMap<>();
 

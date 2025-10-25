@@ -4,6 +4,7 @@ import lombok.NonNull;
 
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
+import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
 import org.geysermc.geyser.session.UpstreamSession;
 import oxy.geyser.reversion.GeyserReversion;
 import oxy.geyser.reversion.session.GeyserTranslatedUser;
@@ -26,8 +27,12 @@ public final class TranslatorSendListener extends UpstreamSession {
 
     @Override
     public void sendPacket(@NonNull BedrockPacket packet) {
+        if (packet instanceof ItemComponentPacket componentPacket) {
+            this.user.setItemDefinitions(componentPacket);
+        }
+
         if (this.user != null) {
-            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxy(this.user, packet);
+            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxyOld(this.user, packet);
             if (oxyPacket != null) {
                 this.user.getWorldReader().onClientbound(oxyPacket);
                 oxyPacket = this.user.translateClientbound(oxyPacket);
@@ -45,7 +50,7 @@ public final class TranslatorSendListener extends UpstreamSession {
     @Override
     public void sendPacketImmediately(@NonNull BedrockPacket packet) {
         if (this.user != null) {
-            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxy(this.user, packet);
+            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxyOld(this.user, packet);
             if (oxyPacket != null) {
                 this.user.getWorldReader().onClientbound(oxyPacket);
                 oxyPacket = this.user.translateClientbound(oxyPacket);
