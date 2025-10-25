@@ -21,12 +21,12 @@ public class PacketUtil {
         }
     }
 
-    public static oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket toOxyOld(final GeyserTranslatedUser user, final BedrockPacket packet) {
+    public static oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket toOxyNew(final GeyserTranslatedUser user, final BedrockPacket packet) {
         final ByteBuf decoded = Unpooled.buffer();
         try {
             GeyserReversion.OLDEST_GEYSER_CODEC.tryEncode(user.getCloudburstLatestHelper(), decoded, packet);
 
-            return GeyserReversion.OLDEST_GEYSER_OXY_CODEC.tryDecode(user.getLatestHelper(), decoded, user.getCloudburstCodec().getPacketDefinition(packet.getClass()).getId());
+            return GeyserReversion.OLDEST_GEYSER_OXY_CODEC.tryDecode(user.getLatestHelper(), decoded, GeyserReversion.OLDEST_GEYSER_CODEC.getPacketDefinition(packet.getClass()).getId());
         } catch (Exception ignored) {
             ignored.printStackTrace();
             return null;
