@@ -65,6 +65,7 @@ public class GeyserTranslatedUser extends UserSession {
         SimpleDefinitionRegistry<org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition> itemDefinitions = builder.build();
         this.cloudburstHelper.setItemDefinitions(itemDefinitions);
         this.cloudburstLatestHelper.setItemDefinitions(itemDefinitions);
+//        System.out.println(itemDefinitions);
 
         oxy.toviabedrock.shaded.protocol.common.SimpleDefinitionRegistry.Builder<ItemDefinition> builder1 = oxy.toviabedrock.shaded.protocol.common.SimpleDefinitionRegistry.<ItemDefinition>builder()
                 .add(new oxy.toviabedrock.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition(

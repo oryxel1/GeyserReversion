@@ -40,7 +40,7 @@ public class PacketUtil {
         try {
             GeyserReversion.OLDEST_GEYSER_OXY_CODEC.tryEncode(user.getLatestHelper(), decoded, packet);
 
-            return GeyserReversion.OLDEST_GEYSER_CODEC.tryDecode(user.getCloudburstLatestHelper(), decoded, user.getCodec().getPacketDefinition(packet.getClass()).getId());
+            return GeyserReversion.OLDEST_GEYSER_CODEC.tryDecode(user.getCloudburstLatestHelper(), decoded, GeyserReversion.OLDEST_GEYSER_OXY_CODEC.getPacketDefinition(packet.getClass()).getId());
         } catch (Exception ignored) {
             ignored.printStackTrace();
             return null;
