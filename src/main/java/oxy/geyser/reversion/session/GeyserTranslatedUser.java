@@ -15,6 +15,7 @@ import oxy.toviabedrock.session.UserSession;
 import oxy.toviabedrock.shaded.protocol.bedrock.codec.BedrockCodec;
 import oxy.toviabedrock.shaded.protocol.bedrock.codec.BedrockCodecHelper;
 import oxy.toviabedrock.shaded.protocol.bedrock.data.definitions.ItemDefinition;
+import oxy.toviabedrock.shaded.protocol.bedrock.data.inventory.ItemVersion;
 
 @Getter
 public class GeyserTranslatedUser extends UserSession {
@@ -59,7 +60,7 @@ public class GeyserTranslatedUser extends UserSession {
                 .add(new SimpleItemDefinition("minecraft:empty", 0, false));
 
         for (org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition definition : packet.getItems()) {
-            builder.add(new SimpleItemDefinition(definition.getIdentifier(), definition.getRuntimeId(), definition.isComponentBased()));
+            builder.add(new SimpleItemDefinition(definition.getIdentifier(), definition.getRuntimeId(), definition.getVersion(), definition.isComponentBased(), definition.getComponentData()));
         }
 
         SimpleDefinitionRegistry<org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition> itemDefinitions = builder.build();
@@ -68,11 +69,10 @@ public class GeyserTranslatedUser extends UserSession {
 //        System.out.println(itemDefinitions);
 
         oxy.toviabedrock.shaded.protocol.common.SimpleDefinitionRegistry.Builder<ItemDefinition> builder1 = oxy.toviabedrock.shaded.protocol.common.SimpleDefinitionRegistry.<ItemDefinition>builder()
-                .add(new oxy.toviabedrock.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition(
-                        "minecraft:empty", 0, false));
+                .add(new oxy.toviabedrock.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition("minecraft:empty", 0, false));
 
         for (org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition definition : packet.getItems()) {
-            builder1.add(new oxy.toviabedrock.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition(definition.getIdentifier(), definition.getRuntimeId(), definition.isComponentBased()));
+            builder1.add(new oxy.toviabedrock.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition(definition.getIdentifier(), definition.getRuntimeId(), ItemVersion.from(definition.getVersion().ordinal()), definition.isComponentBased(), definition.getComponentData()));
         }
 
         oxy.toviabedrock.shaded.protocol.common.SimpleDefinitionRegistry<ItemDefinition> itemDefinitions1 = builder1.build();
