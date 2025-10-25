@@ -1,0 +1,6 @@
+id: geyser-reversion
+name: GeyserReversion
+main: oxy.geyser.reversion.GeyserReversion
+api: 2.9.0
+version: 1.0.0
+authors: [oryxel]

@@ -1,0 +1,48 @@
+package oxy.geyser.reversion.util;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
+import oxy.geyser.reversion.GeyserReversion;
+import oxy.geyser.reversion.session.GeyserTranslatedUser;
+
+public class PacketUtil {
+    public static oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket toOxy(final GeyserTranslatedUser user, final BedrockPacket packet) {
+        final ByteBuf decoded = Unpooled.buffer();
+        try {
+            user.getCloudburstCodec().tryEncode(user.getCloudburstHelper(), decoded, packet);
+
+            return user.getCodec().tryDecode(user.getHelper(), decoded, user.getCloudburstCodec().getPacketDefinition(packet.getClass()).getId());
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            decoded.release();
+        }
+    }
+
+    public static BedrockPacket toCloudburstMCLatest(final GeyserTranslatedUser user, oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket packet) {
+        final ByteBuf decoded = Unpooled.buffer();
+        try {
+            GeyserReversion.OLDEST_GEYSER_OXY_CODEC.tryEncode(GeyserReversion.OXY_CODEC_HELPER, decoded, packet);
+
+            return GeyserReversion.OLDEST_GEYSER_CODEC.tryDecode(GeyserReversion.CODEC_HELPER, decoded, user.getCodec().getPacketDefinition(packet.getClass()).getId());
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            decoded.release();
+        }
+    }
+
+    public static BedrockPacket toCloudburstOld(final GeyserTranslatedUser user, oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket packet) {
+        final ByteBuf decoded = Unpooled.buffer();
+        try {
+            user.getCodec().tryEncode(user.getHelper(), decoded, packet);
+
+            return user.getCloudburstCodec().tryDecode(user.getCloudburstHelper(), decoded, user.getCodec().getPacketDefinition(packet.getClass()).getId());
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            decoded.release();
+        }
+    }
+}

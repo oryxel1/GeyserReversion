@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+}
+
+group = 'oxy.geyser.reversion'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    maven {url = "https://repo.opencollab.dev/main/"}
+//    maven {
+//        url = "https://jitpack.io"
+//
+//        content {
+//            includeGroupByRegex "com\\.github\\..+"
+//        }
+//    }
+}
+
+
+dependencies {
+    compileOnly("org.geysermc.geyser:core:2.9.0-SNAPSHOT") {
+        exclude group: "com.google.code.gson", module: "gson"
+    }
+    compileOnly("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
+
+    // Honestly it's not idea to use an jar file directly, but eh this is convenient for me, and yes I know jitpack exist.
+    implementation(files("libs/to-viabedrock.jar"))
+}
+
+shadowJar {
+    dependencies {
+        include(dependency(files("libs/to-viabedrock.jar")))
+    }
+}
