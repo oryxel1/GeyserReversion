@@ -32,7 +32,7 @@ public final class TranslatorSendListener extends UpstreamSession {
         }
 
         if (this.user != null) {
-            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxyOld(this.user, packet);
+            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxy(this.user, packet);
             if (oxyPacket != null) {
                 this.user.getWorldReader().onClientbound(oxyPacket);
                 oxyPacket = this.user.translateClientbound(oxyPacket);
@@ -50,7 +50,7 @@ public final class TranslatorSendListener extends UpstreamSession {
     @Override
     public void sendPacketImmediately(@NonNull BedrockPacket packet) {
         if (this.user != null) {
-            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxyOld(this.user, packet);
+            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxy(this.user, packet);
             if (oxyPacket != null) {
                 this.user.getWorldReader().onClientbound(oxyPacket);
                 oxyPacket = this.user.translateClientbound(oxyPacket);
