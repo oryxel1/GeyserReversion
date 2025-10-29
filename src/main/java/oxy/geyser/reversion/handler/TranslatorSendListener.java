@@ -28,7 +28,9 @@ public final class TranslatorSendListener extends UpstreamSession {
     @Override
     public void sendPacket(@NonNull BedrockPacket packet) {
         if (packet instanceof ItemComponentPacket componentPacket) {
-            this.user.setItemDefinitions(componentPacket);
+            if (this.user != null) {
+                this.user.setItemDefinitions(componentPacket);
+            }
         }
 
         if (this.user != null) {

@@ -44,9 +44,8 @@ public class TranslatorPacketHandler extends UpstreamPacketHandler {
             if (GameProtocol.getBedrockCodec(pv) == null) {
                 this.user = new GeyserTranslatedUser(pv, GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion(), this.session);
                 this.user.getTranslators().forEach(translator -> translator.init(this.user));
+                loginPacket.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
             }
-
-            loginPacket.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
         }
 
         if (this.user != null && !(packet instanceof LoginPacket)) {
