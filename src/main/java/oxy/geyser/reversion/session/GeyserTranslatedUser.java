@@ -2,8 +2,8 @@ package oxy.geyser.reversion.session;
 
 import com.github.blackjack200.ouranos.ProtocolInfo;
 import com.github.blackjack200.ouranos.session.OuranosSession;
-import com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.definitions.BlockDefinition;
-import com.github.blackjack200.ouranos.shaded.protocol.common.DefinitionRegistry;
+import com.github.blackjack200.ouranos.utils.BlockDictionaryRegistry;
+import com.github.blackjack200.ouranos.utils.ItemTypeDictionaryRegistry;
 import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleItemDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -39,18 +39,10 @@ public class GeyserTranslatedUser extends OuranosSession {
         this.cloudburstLatestHelper = GeyserReversion.OLDEST_GEYSER_CODEC.createHelper();
         this.cloudburstHelper = this.cloudburstCodec.createHelper();
 
-        this.helper.setBlockDefinitions(new DefinitionRegistry<>() {
-            @Override
-            public BlockDefinition getDefinition(int runtimeId) {
-                return () -> runtimeId;
-            }
-
-            @Override
-            public boolean isRegistered(BlockDefinition definition) {
-                return true;
-            }
-        });
-        this.latestHelper.setBlockDefinitions(this.helper.getBlockDefinitions());
+        this.helper.setItemDefinitions(new ItemTypeDictionaryRegistry(protocolVersion));
+        this.helper.setBlockDefinitions(new BlockDictionaryRegistry(protocolVersion));
+        this.latestHelper.setItemDefinitions(new ItemTypeDictionaryRegistry(serverVersion));
+        this.latestHelper.setBlockDefinitions(new BlockDictionaryRegistry(serverVersion));
 
         this.cloudburstHelper.setBlockDefinitions(new org.cloudburstmc.protocol.common.DefinitionRegistry<>() {
             @Override
@@ -89,8 +81,8 @@ public class GeyserTranslatedUser extends OuranosSession {
 
         com.github.blackjack200.ouranos.shaded.protocol.common.SimpleDefinitionRegistry<ItemDefinition> itemDefinitions1 = builder1.build();
 
-        this.helper.setItemDefinitions(itemDefinitions1);
-        this.latestHelper.setItemDefinitions(itemDefinitions1);
+//        this.helper.setItemDefinitions(itemDefinitions1);
+//        this.latestHelper.setItemDefinitions(itemDefinitions1);
     }
 
     @Override
