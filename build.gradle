@@ -26,12 +26,12 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.36")
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
-    // Honestly it's not idea to use an jar file directly, but eh this is convenient for me, and yes I know jitpack exist.
-    implementation(files("libs/to-viabedrock.jar"))
+    // Honestly it's not ideal to use an jar file directly, but eh this is convenient for me, and yes I know jitpack exist.
+    implementation(files("libs/ouranos-1.0-all.jar"))
 }
 
 shadowJar {
     dependencies {
-        include(dependency(files("libs/to-viabedrock.jar")))
+        include(dependency(files("libs/ouranos-1.0-all.jar")))
     }
 }

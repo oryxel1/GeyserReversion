@@ -1,5 +1,6 @@
 package oxy.geyser.reversion;
 
+import com.github.blackjack200.ouranos.ProtocolInfo;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -32,41 +33,20 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.network.helper.TransportHelper;
 import oxy.geyser.reversion.handler.init.TranslatorServerInitializer;
 import oxy.geyser.reversion.util.GeyserUtil;
-import oxy.toviabedrock.ToViaBedrock;
-import oxy.toviabedrock.shaded.protocol.bedrock.codec.v729.Bedrock_v729;
-import oxy.toviabedrock.shaded.protocol.bedrock.codec.v748.Bedrock_v748;
-import oxy.toviabedrock.shaded.protocol.bedrock.codec.v766.Bedrock_v766;
-import oxy.toviabedrock.shaded.protocol.bedrock.codec.v776.Bedrock_v776;
-import oxy.toviabedrock.shaded.protocol.bedrock.codec.v786.Bedrock_v786;
-import oxy.toviabedrock.shaded.protocol.bedrock.codec.v800.Bedrock_v800;
 
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_GLOBAL_PACKET_LIMIT;
 import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_PACKET_LIMIT;
 
 public class GeyserReversion implements Extension {
     public static BedrockCodec OLDEST_GEYSER_CODEC = fixCodec(Bedrock_v818.CODEC);
-    public static oxy.toviabedrock.shaded.protocol.bedrock.codec.BedrockCodec OLDEST_GEYSER_OXY_CODEC;
+    public static com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.BedrockCodec OLDEST_GEYSER_OXY_CODEC;
     static {
-        oxy.toviabedrock.shaded.protocol.bedrock.codec.BedrockCodecHelper helper = oxy.toviabedrock.shaded.protocol.bedrock.codec.v818.Bedrock_v818.CODEC.createHelper();
-        helper.setEncodingSettings(oxy.toviabedrock.shaded.protocol.bedrock.data.EncodingSettings.builder().maxListSize(Integer.MAX_VALUE).maxByteArraySize(Integer.MAX_VALUE).maxNetworkNBTSize(Integer.MAX_VALUE).maxItemNBTSize(Integer.MAX_VALUE).maxStringLength(Integer.MAX_VALUE).build());
-        OLDEST_GEYSER_OXY_CODEC = oxy.toviabedrock.shaded.protocol.bedrock.codec.v818.Bedrock_v818.CODEC.toBuilder().helper(() -> helper).build();
-    }
-
-    public static Map<Integer, BedrockCodec> OXY_CODEC_MAPPER = new HashMap<>();
-
-    static {
-        OXY_CODEC_MAPPER.put(oxy.toviabedrock.shaded.protocol.bedrock.codec.v818.Bedrock_v818.CODEC.getProtocolVersion(), fixCodec(Bedrock_v818.CODEC));
-        OXY_CODEC_MAPPER.put(Bedrock_v800.CODEC.getProtocolVersion(), fixCodec(org.cloudburstmc.protocol.bedrock.codec.v800.Bedrock_v800.CODEC));
-        OXY_CODEC_MAPPER.put(Bedrock_v786.CODEC.getProtocolVersion(), fixCodec(org.cloudburstmc.protocol.bedrock.codec.v786.Bedrock_v786.CODEC));
-        OXY_CODEC_MAPPER.put(Bedrock_v776.CODEC.getProtocolVersion(), fixCodec(org.cloudburstmc.protocol.bedrock.codec.v776.Bedrock_v776.CODEC));
-        OXY_CODEC_MAPPER.put(Bedrock_v766.CODEC.getProtocolVersion(), fixCodec(org.cloudburstmc.protocol.bedrock.codec.v766.Bedrock_v766.CODEC));
-        OXY_CODEC_MAPPER.put(Bedrock_v748.CODEC.getProtocolVersion(), fixCodec(org.cloudburstmc.protocol.bedrock.codec.v748.Bedrock_v748.CODEC));
-        OXY_CODEC_MAPPER.put(Bedrock_v729.CODEC.getProtocolVersion(), fixCodec(org.cloudburstmc.protocol.bedrock.codec.v729.Bedrock_v729.CODEC));
+        com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.BedrockCodecHelper helper = com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v818.Bedrock_v818.CODEC.createHelper();
+        helper.setEncodingSettings(com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.EncodingSettings.builder().maxListSize(Integer.MAX_VALUE).maxByteArraySize(Integer.MAX_VALUE).maxNetworkNBTSize(Integer.MAX_VALUE).maxItemNBTSize(Integer.MAX_VALUE).maxStringLength(Integer.MAX_VALUE).build());
+        OLDEST_GEYSER_OXY_CODEC = com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v818.Bedrock_v818.CODEC.toBuilder().helper(() -> helper).build();
     }
 
     private static BedrockCodec fixCodec(BedrockCodec codec) {
@@ -81,8 +61,6 @@ public class GeyserReversion implements Extension {
     @SneakyThrows
     @Subscribe
     public void onGeyserPostInitializeEvent(GeyserPostInitializeEvent event) {
-        ToViaBedrock.init();
-
         final GeyserImpl geyser = GeyserImpl.getInstance();
         geyser.getGeyserServer().shutdown();
 

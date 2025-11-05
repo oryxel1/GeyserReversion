@@ -1,5 +1,6 @@
 package oxy.geyser.reversion.handler;
 
+import com.github.blackjack200.ouranos.ProtocolInfo;
 import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -10,10 +11,12 @@ import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.network.UpstreamPacketHandler;
 import org.geysermc.geyser.session.GeyserSession;
+import oxy.geyser.reversion.DuplicatedProtocolInfo;
 import oxy.geyser.reversion.GeyserReversion;
 import oxy.geyser.reversion.session.GeyserTranslatedUser;
 import oxy.geyser.reversion.util.PacketUtil;
-import oxy.toviabedrock.ToViaBedrock;
+
+import java.lang.reflect.Field;
 
 public class TranslatorPacketHandler extends UpstreamPacketHandler {
     @Getter
@@ -36,6 +39,20 @@ public class TranslatorPacketHandler extends UpstreamPacketHandler {
                 networkSettingsPacket.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
             }
         } else if (packet instanceof LoginPacket loginPacket) {
+            if (this.cachedProtocolVersion == 0) { // Older versions don't send this.
+                this.cachedProtocolVersion = loginPacket.getProtocolVersion();
+
+                try {
+                    final Field field = UpstreamPacketHandler.class.getDeclaredField("networkSettingsRequested");
+                    field.setAccessible(true);
+                    field.set(this, true);
+                } catch (Exception e) {
+                    session.disconnect("Some expection occured when you trying to join!");
+                    e.printStackTrace();
+                }
+                session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.cachedProtocolVersion));
+            }
+
             final int pv = loginPacket.getProtocolVersion();
             if (kickIfNotSupported(pv)) {
                 return PacketSignal.HANDLED;
@@ -43,20 +60,20 @@ public class TranslatorPacketHandler extends UpstreamPacketHandler {
 
             if (GameProtocol.getBedrockCodec(pv) == null) {
                 this.user = new GeyserTranslatedUser(pv, GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion(), this.session);
-                this.user.getTranslators().forEach(translator -> translator.init(this.user));
                 loginPacket.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
             }
         }
 
         if (this.user != null && !(packet instanceof LoginPacket)) {
-            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxy(this.user, packet);
+            com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxy(this.user, packet);
             if (oxyPacket != null) {
-                this.user.getWorldReader().onServerbound(oxyPacket);
                 oxyPacket = this.user.translateServerbound(oxyPacket);
 
-                final BedrockPacket translated = PacketUtil.toCloudburstMCLatest(this.user, oxyPacket);
-                if (translated != null) {
-                    super.handlePacket(translated);
+                if (oxyPacket != null) {
+                    final BedrockPacket translated = PacketUtil.toCloudburstMCLatest(this.user, oxyPacket);
+                    if (translated != null) {
+                        super.handlePacket(translated);
+                    }
                 }
             }
         } else {
@@ -66,7 +83,7 @@ public class TranslatorPacketHandler extends UpstreamPacketHandler {
         // We trick Geyser into using a different codec, it's wrong now, so we correct it :)
         if (packet instanceof RequestNetworkSettingsPacket) {
             if (GameProtocol.getBedrockCodec(this.cachedProtocolVersion) == null) {
-                session.getUpstream().getSession().setCodec(GeyserReversion.OXY_CODEC_MAPPER.get(ToViaBedrock.getCodec(this.cachedProtocolVersion).getProtocolVersion()));
+                session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.cachedProtocolVersion));
             }
         }
 
@@ -74,7 +91,7 @@ public class TranslatorPacketHandler extends UpstreamPacketHandler {
     }
 
     private boolean kickIfNotSupported(int protocolVersion) {
-        if (!ToViaBedrock.isSupported(protocolVersion) && GameProtocol.getBedrockCodec(protocolVersion) == null) {
+        if (ProtocolInfo.getPacketCodec(protocolVersion) == null && GameProtocol.getBedrockCodec(protocolVersion) == null) {
             session.getUpstream().getSession().setCodec(BedrockCompat.disconnectCompat(protocolVersion));
             session.disconnect("Eh your version is old as hell, please update (PV: " + protocolVersion + ").");
             return true;

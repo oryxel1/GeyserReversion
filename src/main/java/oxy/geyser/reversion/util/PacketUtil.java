@@ -7,7 +7,11 @@ import oxy.geyser.reversion.GeyserReversion;
 import oxy.geyser.reversion.session.GeyserTranslatedUser;
 
 public class PacketUtil {
-    public static oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket toOxy(final GeyserTranslatedUser user, final BedrockPacket packet) {
+    public static com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket toOxy(final GeyserTranslatedUser user, final BedrockPacket packet) {
+        if (user.getCloudburstCodec().getPacketDefinition(packet.getClass()) == null) {
+            return null;
+        }
+
         final ByteBuf decoded = Unpooled.buffer();
         try {
             user.getCloudburstCodec().tryEncode(user.getCloudburstHelper(), decoded, packet);
@@ -21,7 +25,11 @@ public class PacketUtil {
         }
     }
 
-    public static oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket toOxyNew(final GeyserTranslatedUser user, final BedrockPacket packet) {
+    public static com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket toOxyNew(final GeyserTranslatedUser user, final BedrockPacket packet) {
+        if (GeyserReversion.OLDEST_GEYSER_CODEC.getPacketDefinition(packet.getClass()) == null) {
+            return null;
+        }
+
         final ByteBuf decoded = Unpooled.buffer();
         try {
             GeyserReversion.OLDEST_GEYSER_CODEC.tryEncode(user.getCloudburstLatestHelper(), decoded, packet);
@@ -35,7 +43,11 @@ public class PacketUtil {
         }
     }
 
-    public static BedrockPacket toCloudburstMCLatest(final GeyserTranslatedUser user, oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket packet) {
+    public static BedrockPacket toCloudburstMCLatest(final GeyserTranslatedUser user, com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket packet) {
+        if (GeyserReversion.OLDEST_GEYSER_OXY_CODEC.getPacketDefinition(packet.getClass()) == null) {
+            return null;
+        }
+
         final ByteBuf decoded = Unpooled.buffer();
         try {
             GeyserReversion.OLDEST_GEYSER_OXY_CODEC.tryEncode(user.getLatestHelper(), decoded, packet);
@@ -49,7 +61,11 @@ public class PacketUtil {
         }
     }
 
-    public static BedrockPacket toCloudburstOld(final GeyserTranslatedUser user, oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket packet) {
+    public static BedrockPacket toCloudburstOld(final GeyserTranslatedUser user, com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket packet) {
+        if (user.getCodec().getPacketDefinition(packet.getClass()) == null) {
+            return null;
+        }
+
         final ByteBuf decoded = Unpooled.buffer();
         try {
             user.getCodec().tryEncode(user.getHelper(), decoded, packet);

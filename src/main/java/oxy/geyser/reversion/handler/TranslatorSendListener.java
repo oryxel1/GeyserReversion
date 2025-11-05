@@ -1,7 +1,10 @@
 package oxy.geyser.reversion.handler;
 
+import com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.StartGamePacket;
 import lombok.NonNull;
 
+import org.cloudburstmc.nbt.NbtList;
+import org.cloudburstmc.nbt.NbtType;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
@@ -34,14 +37,18 @@ public final class TranslatorSendListener extends UpstreamSession {
         }
 
         if (this.user != null) {
-            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxyNew(this.user, packet);
+            com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxyNew(this.user, packet);
+            if (oxyPacket instanceof StartGamePacket startGamePacket) {
+                startGamePacket.setBlockPalette(new NbtList<>(NbtType.COMPOUND));
+            }
             if (oxyPacket != null) {
-                this.user.getWorldReader().onClientbound(oxyPacket);
                 oxyPacket = this.user.translateClientbound(oxyPacket);
 
-                final BedrockPacket translated = PacketUtil.toCloudburstOld(this.user, oxyPacket);
-                if (translated != null) {
-                    super.sendPacket(translated);
+                if (oxyPacket != null) {
+                    final BedrockPacket translated = PacketUtil.toCloudburstOld(this.user, oxyPacket);
+                    if (translated != null) {
+                        super.sendPacket(translated);
+                    }
                 }
             }
         } else {
@@ -52,14 +59,15 @@ public final class TranslatorSendListener extends UpstreamSession {
     @Override
     public void sendPacketImmediately(@NonNull BedrockPacket packet) {
         if (this.user != null) {
-            oxy.toviabedrock.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxyNew(this.user, packet);
+            com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket oxyPacket = PacketUtil.toOxyNew(this.user, packet);
             if (oxyPacket != null) {
-                this.user.getWorldReader().onClientbound(oxyPacket);
                 oxyPacket = this.user.translateClientbound(oxyPacket);
 
-                final BedrockPacket translated = PacketUtil.toCloudburstOld(this.user, oxyPacket);
-                if (translated != null) {
-                    super.sendPacketImmediately(translated);
+                if (oxyPacket != null) {
+                    final BedrockPacket translated = PacketUtil.toCloudburstOld(this.user, oxyPacket);
+                    if (translated != null) {
+                        super.sendPacketImmediately(translated);
+                    }
                 }
             }
         } else {
