@@ -14,6 +14,7 @@ import org.geysermc.geyser.session.GeyserSession;
 import oxy.geyser.reversion.DuplicatedProtocolInfo;
 import oxy.geyser.reversion.GeyserReversion;
 import oxy.geyser.reversion.session.GeyserTranslatedUser;
+import oxy.geyser.reversion.util.GeyserUtil;
 import oxy.geyser.reversion.util.PacketUtil;
 
 import java.lang.reflect.Field;
@@ -61,6 +62,7 @@ public class TranslatorPacketHandler extends UpstreamPacketHandler {
             if (GameProtocol.getBedrockCodec(pv) == null) {
                 this.user = new GeyserTranslatedUser(pv, GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion(), this.session);
                 loginPacket.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
+                GeyserUtil.hook(session);
             }
         }
 

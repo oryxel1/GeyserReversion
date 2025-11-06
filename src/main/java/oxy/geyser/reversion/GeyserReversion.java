@@ -117,11 +117,6 @@ public class GeyserReversion implements Extension {
         playerGroupField.set(geyser.getGeyserServer(), serverInitializer.getEventLoopGroup());
     }
 
-    @Subscribe
-    public void onSessionJoin(SessionLoginEvent event) {
-        GeyserUtil.hook((GeyserSession) event.connection());
-    }
-
     private void modifyHandlers(ChannelFuture future) {
         Channel channel = future.channel();
         // Add our ping handler

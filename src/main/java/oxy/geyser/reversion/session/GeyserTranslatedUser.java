@@ -3,7 +3,6 @@ package oxy.geyser.reversion.session;
 import com.github.blackjack200.ouranos.ProtocolInfo;
 import com.github.blackjack200.ouranos.session.OuranosSession;
 import com.github.blackjack200.ouranos.utils.BlockDictionaryRegistry;
-import com.github.blackjack200.ouranos.utils.ItemTypeDictionaryRegistry;
 import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleItemDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -13,6 +12,7 @@ import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
 import oxy.geyser.reversion.DuplicatedProtocolInfo;
 import oxy.geyser.reversion.GeyserReversion;
+import oxy.geyser.reversion.fixed.ItemTypeDictionaryRegistry;
 import oxy.geyser.reversion.util.PacketUtil;
 import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.BedrockCodec;
 import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.BedrockCodecHelper;
@@ -39,10 +39,10 @@ public class GeyserTranslatedUser extends OuranosSession {
         this.cloudburstLatestHelper = GeyserReversion.OLDEST_GEYSER_CODEC.createHelper();
         this.cloudburstHelper = this.cloudburstCodec.createHelper();
 
-        this.helper.setItemDefinitions(new ItemTypeDictionaryRegistry(protocolVersion));
-        this.helper.setBlockDefinitions(new BlockDictionaryRegistry(protocolVersion));
-        this.latestHelper.setItemDefinitions(new ItemTypeDictionaryRegistry(serverVersion));
-        this.latestHelper.setBlockDefinitions(new BlockDictionaryRegistry(serverVersion));
+        this.helper.setItemDefinitions(new ItemTypeDictionaryRegistry(serverVersion));
+        this.helper.setBlockDefinitions(new BlockDictionaryRegistry(serverVersion));
+        this.latestHelper.setItemDefinitions(new ItemTypeDictionaryRegistry(protocolVersion));
+        this.latestHelper.setBlockDefinitions(new BlockDictionaryRegistry(protocolVersion));
 
         this.cloudburstHelper.setBlockDefinitions(new org.cloudburstmc.protocol.common.DefinitionRegistry<>() {
             @Override
@@ -78,11 +78,6 @@ public class GeyserTranslatedUser extends OuranosSession {
         for (org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition definition : packet.getItems()) {
             builder1.add(new com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition(definition.getIdentifier(), definition.getRuntimeId(), ItemVersion.from(definition.getVersion().ordinal()), definition.isComponentBased(), definition.getComponentData()));
         }
-
-        com.github.blackjack200.ouranos.shaded.protocol.common.SimpleDefinitionRegistry<ItemDefinition> itemDefinitions1 = builder1.build();
-
-//        this.helper.setItemDefinitions(itemDefinitions1);
-//        this.latestHelper.setItemDefinitions(itemDefinitions1);
     }
 
     @Override
