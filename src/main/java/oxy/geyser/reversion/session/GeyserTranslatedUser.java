@@ -6,7 +6,9 @@ import io.netty.buffer.Unpooled;
 import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
+import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
+import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
 import oxy.geyser.reversion.DuplicatedProtocolInfo;
@@ -30,6 +32,19 @@ public class GeyserTranslatedUser extends SpecialOuranosSession {
 
         this.cloudburstClientCodecHelper = this.cloudburstClientCodec.createHelper();
         this.cloudburstServerCodecHelper = this.cloudburstServerCodec.createHelper();
+
+        this.cloudburstClientCodecHelper.setBlockDefinitions(new DefinitionRegistry<>() {
+            @Override
+            public BlockDefinition getDefinition(int runtimeId) {
+                return () -> runtimeId;
+            }
+
+            @Override
+            public boolean isRegistered(BlockDefinition definition) {
+                return true;
+            }
+        });
+        this.cloudburstServerCodecHelper.setBlockDefinitions(this.cloudburstClientCodecHelper.getBlockDefinitions());
     }
 
     @Override

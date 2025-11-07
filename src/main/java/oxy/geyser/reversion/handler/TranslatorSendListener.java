@@ -6,9 +6,11 @@ import lombok.NonNull;
 
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
+import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
 import org.geysermc.geyser.session.UpstreamSession;
 import oxy.geyser.reversion.GeyserReversion;
 import oxy.geyser.reversion.session.GeyserTranslatedUser;
+import oxy.geyser.reversion.util.RegistryUtil;
 
 public final class TranslatorSendListener extends UpstreamSession {
     private final GeyserTranslatedUser user;
@@ -22,11 +24,15 @@ public final class TranslatorSendListener extends UpstreamSession {
 
     @Override
     public void disconnect(String reason) {
-        oldSession.disconnect(reason);
+        this.oldSession.disconnect(reason);
     }
 
     @Override
     public void sendPacket(@NonNull BedrockPacket packet) {
+        if (packet instanceof ItemComponentPacket) {
+            RegistryUtil.onItemComponent(this.user, (ItemComponentPacket) packet);
+        }
+
         if (this.user != null) {
             final BedrockPacket translated = this.translate(packet);
             if (translated != null) {
