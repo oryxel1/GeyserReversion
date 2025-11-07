@@ -37,12 +37,16 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
 
         this.clientProtocol = packet.getProtocolVersion();
 
-        if (GameProtocol.getBedrockCodec(this.clientProtocol) == null) {
+        final boolean needTranslation = GameProtocol.getBedrockCodec(this.clientProtocol) == null;
+        if (needTranslation) {
             packet.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
-            session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
         }
 
         super.handle(packet);
+
+        if (needTranslation) {
+            session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
+        }
 
         return PacketSignal.HANDLED;
     }
@@ -63,8 +67,6 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             }
         }
 
-        session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
-
         final int pv = packet.getProtocolVersion();
         if (checkCodec(pv)) {
             return PacketSignal.HANDLED;
@@ -73,6 +75,7 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
         if (GameProtocol.getBedrockCodec(pv) == null) {
             this.user = new GeyserTranslatedUser(pv, GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion(), this.session);
             packet.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
+            session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
             GeyserUtil.hook(session);
         }
 
