@@ -1,104 +1,92 @@
 package oxy.geyser.reversion.session;
 
-import com.github.blackjack200.ouranos.ProtocolInfo;
-import com.github.blackjack200.ouranos.session.OuranosSession;
-import com.github.blackjack200.ouranos.utils.BlockDictionaryRegistry;
+import com.github.blackjack200.ouranos.session.SpecialOuranosSession;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import lombok.Getter;
-import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleItemDefinition;
+import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
+import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
-import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
-import org.cloudburstmc.protocol.common.SimpleDefinitionRegistry;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
 import oxy.geyser.reversion.DuplicatedProtocolInfo;
-import oxy.geyser.reversion.GeyserReversion;
-import oxy.geyser.reversion.fixed.ItemTypeDictionaryRegistry;
-import oxy.geyser.reversion.util.PacketUtil;
-import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.BedrockCodec;
-import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.BedrockCodecHelper;
-import com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.definitions.ItemDefinition;
-import com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.inventory.ItemVersion;
 
 @Getter
-public class GeyserTranslatedUser extends OuranosSession {
+public class GeyserTranslatedUser extends SpecialOuranosSession {
     private final GeyserSession session;
-    private final BedrockCodec codec;
-    private final org.cloudburstmc.protocol.bedrock.codec.BedrockCodec cloudburstCodec;
-    private final org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper cloudburstHelper;
-    private final BedrockCodecHelper helper;
-    private final BedrockCodecHelper latestHelper;
-    private final org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper cloudburstLatestHelper;
+
+    private final BedrockCodec cloudburstClientCodec;
+    private final BedrockCodecHelper cloudburstClientCodecHelper;
+
+    private final BedrockCodec cloudburstServerCodec;
+    private final BedrockCodecHelper cloudburstServerCodecHelper;
 
     public GeyserTranslatedUser(int protocolVersion, int serverVersion, GeyserSession session) {
         super(protocolVersion, serverVersion);
         this.session = session;
-        this.codec = ProtocolInfo.getPacketCodec(protocolVersion);
-        this.cloudburstCodec = DuplicatedProtocolInfo.getPacketCodec(protocolVersion);
-        this.helper = this.codec.createHelper();
-        this.latestHelper = GeyserReversion.OLDEST_GEYSER_OXY_CODEC.createHelper();
-        this.cloudburstLatestHelper = GeyserReversion.OLDEST_GEYSER_CODEC.createHelper();
-        this.cloudburstHelper = this.cloudburstCodec.createHelper();
 
-        this.helper.setItemDefinitions(new ItemTypeDictionaryRegistry(protocolVersion));
-        this.helper.setBlockDefinitions(new BlockDictionaryRegistry(protocolVersion));
-        this.latestHelper.setItemDefinitions(new ItemTypeDictionaryRegistry(serverVersion));
-        this.latestHelper.setBlockDefinitions(new BlockDictionaryRegistry(serverVersion));
+        this.cloudburstClientCodec = DuplicatedProtocolInfo.getPacketCodec(protocolVersion);
+        this.cloudburstServerCodec = DuplicatedProtocolInfo.getPacketCodec(serverVersion);
 
-        this.cloudburstHelper.setBlockDefinitions(new org.cloudburstmc.protocol.common.DefinitionRegistry<>() {
-            @Override
-            public org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition getDefinition(int runtimeId) {
-                return () -> runtimeId;
-            }
-
-            @Override
-            public boolean isRegistered(org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition definition) {
-                return true;
-            }
-        });
-
-        this.cloudburstLatestHelper.setBlockDefinitions(this.cloudburstHelper.getBlockDefinitions());
-    }
-
-    public void setItemDefinitions(ItemComponentPacket packet) {
-        SimpleDefinitionRegistry.Builder<org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition> builder = SimpleDefinitionRegistry.<org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition>builder()
-                .add(new SimpleItemDefinition("minecraft:empty", 0, false));
-
-        for (org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition definition : packet.getItems()) {
-            builder.add(new SimpleItemDefinition(definition.getIdentifier(), definition.getRuntimeId(), definition.getVersion(), definition.isComponentBased(), definition.getComponentData()));
-        }
-
-        SimpleDefinitionRegistry<org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition> itemDefinitions = builder.build();
-        this.cloudburstHelper.setItemDefinitions(itemDefinitions);
-        this.cloudburstLatestHelper.setItemDefinitions(itemDefinitions);
-//        System.out.println(itemDefinitions);
-
-        com.github.blackjack200.ouranos.shaded.protocol.common.SimpleDefinitionRegistry.Builder<ItemDefinition> builder1 = com.github.blackjack200.ouranos.shaded.protocol.common.SimpleDefinitionRegistry.<ItemDefinition>builder()
-                .add(new com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition("minecraft:empty", 0, false));
-
-        for (org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition definition : packet.getItems()) {
-            builder1.add(new com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition(definition.getIdentifier(), definition.getRuntimeId(), ItemVersion.from(definition.getVersion().ordinal()), definition.isComponentBased(), definition.getComponentData()));
-        }
-
-
+        this.cloudburstClientCodecHelper = this.cloudburstClientCodec.createHelper();
+        this.cloudburstServerCodecHelper = this.cloudburstServerCodec.createHelper();
     }
 
     @Override
     public void sendUpstreamPacket(com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket bedrockPacket) {
-        final BedrockPacket packet = PacketUtil.toCloudburstOld(this, bedrockPacket);
+        final ByteBuf input = Unpooled.buffer();
+
+        BedrockPacket packet = null;
+        try {
+
+            this.encodeClient(bedrockPacket, input);
+            packet = this.decodeClient(input, this.getClientCodec().getPacketDefinition(bedrockPacket.getClass()).getId());
+        }  catch (Exception ignored) {
+        } finally {
+            input.release();
+        }
+
         if (packet == null) {
             return;
         }
 
-        session.sendUpstreamPacket(packet);
+        session.getUpstream().getSession().sendPacket(packet);
     }
 
     @Override
     public void sendDownstreamPacket(com.github.blackjack200.ouranos.shaded.protocol.bedrock.packet.BedrockPacket bedrockPacket) {
-        final BedrockPacket packet = PacketUtil.toCloudburstOld(this, bedrockPacket);
+        final ByteBuf input = Unpooled.buffer();
+
+        BedrockPacket packet = null;
+        try {
+
+            this.encodeServer(bedrockPacket, input);
+            packet = this.decodeServer(input, this.getClientCodec().getPacketDefinition(bedrockPacket.getClass()).getId());
+        }  catch (Exception ignored) {
+        } finally {
+            input.release();
+        }
+
         if (packet == null) {
             return;
         }
 
         Registries.BEDROCK_PACKET_TRANSLATORS.translate(packet.getClass(), packet, session, false);
+    }
+
+    public final void encodeClient(BedrockPacket packet, ByteBuf output) {
+        this.cloudburstClientCodec.tryEncode(this.cloudburstClientCodecHelper, output, packet);
+    }
+
+    public final void encodeServer(BedrockPacket packet, ByteBuf output) {
+        this.cloudburstServerCodec.tryEncode(this.cloudburstServerCodecHelper, output, packet);
+    }
+
+    public final BedrockPacket decodeClient(ByteBuf input, int id) {
+        return this.cloudburstClientCodec.tryDecode(this.cloudburstClientCodecHelper, input, id);
+    }
+
+    public final BedrockPacket decodeServer(ByteBuf input, int id) {
+        return this.cloudburstServerCodec.tryDecode(this.cloudburstServerCodecHelper, input, id);
     }
 }

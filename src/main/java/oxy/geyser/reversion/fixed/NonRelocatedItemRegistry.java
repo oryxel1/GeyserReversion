@@ -2,14 +2,15 @@ package oxy.geyser.reversion.fixed;
 
 import com.github.blackjack200.ouranos.converter.ItemTypeDictionary;
 import com.github.blackjack200.ouranos.data.ItemTypeInfo;
-import com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.definitions.ItemDefinition;
-import com.github.blackjack200.ouranos.shaded.protocol.common.DefinitionRegistry;
-import com.github.blackjack200.ouranos.utils.SimpleVersionedItemDefinition;
+import org.cloudburstmc.nbt.NbtMap;
+import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
+import org.cloudburstmc.protocol.common.DefinitionRegistry;
 
-public class ItemTypeDictionaryRegistry implements DefinitionRegistry<ItemDefinition> {
+public class NonRelocatedItemRegistry implements DefinitionRegistry<ItemDefinition> {
     private final int protocol;
 
-    public ItemTypeDictionaryRegistry(int protocol) {
+    public NonRelocatedItemRegistry(int protocol) {
         this.protocol = protocol;
     }
 
@@ -18,7 +19,32 @@ public class ItemTypeDictionaryRegistry implements DefinitionRegistry<ItemDefini
             ItemTypeDictionary.InnerEntry dict = ItemTypeDictionary.getInstance(this.protocol);
             String strId = dict.fromIntId(runtimeId);
             ItemTypeInfo x = dict.getEntries().get(strId);
-            return new SimpleVersionedItemDefinition(strId, x.runtime_id(), x.getVersion(), x.component_based(), x.getComponentNbt());
+            return new ItemDefinition() {
+                @Override
+                public boolean isComponentBased() {
+                    return x.component_based();
+                }
+
+                @Override
+                public String getIdentifier() {
+                    return strId;
+                }
+
+                @Override
+                public int getRuntimeId() {
+                    return x.runtime_id();
+                }
+
+                @Override
+                public ItemVersion getVersion() {
+                    return x.getVersion() == null ? ItemVersion.LEGACY : ItemVersion.from(x.getVersion().ordinal());
+                }
+
+                @Override
+                public NbtMap getComponentData() {
+                    return x.getComponentNbt();
+                }
+            };
         } catch (Exception ignored) {
             return new ItemDefinition() {
                 @Override
