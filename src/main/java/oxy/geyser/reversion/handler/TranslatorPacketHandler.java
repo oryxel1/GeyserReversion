@@ -100,6 +100,7 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
 
             super.handlePacket(this.user.decodeServer(output, this.user.getCloudburstServerCodec().getPacketDefinition(packet.getClass()).getId()));
         } catch (Exception ignored) {
+            ignored.printStackTrace();
         } finally {
             input.release();
             output.release();
