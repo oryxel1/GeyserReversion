@@ -39,10 +39,10 @@ public class GeyserTranslatedUser extends OuranosSession {
         this.cloudburstLatestHelper = GeyserReversion.OLDEST_GEYSER_CODEC.createHelper();
         this.cloudburstHelper = this.cloudburstCodec.createHelper();
 
-        this.helper.setItemDefinitions(new ItemTypeDictionaryRegistry(serverVersion));
-        this.helper.setBlockDefinitions(new BlockDictionaryRegistry(serverVersion));
-        this.latestHelper.setItemDefinitions(new ItemTypeDictionaryRegistry(protocolVersion));
-        this.latestHelper.setBlockDefinitions(new BlockDictionaryRegistry(protocolVersion));
+        this.helper.setItemDefinitions(new ItemTypeDictionaryRegistry(protocolVersion));
+        this.helper.setBlockDefinitions(new BlockDictionaryRegistry(protocolVersion));
+        this.latestHelper.setItemDefinitions(new ItemTypeDictionaryRegistry(serverVersion));
+        this.latestHelper.setBlockDefinitions(new BlockDictionaryRegistry(serverVersion));
 
         this.cloudburstHelper.setBlockDefinitions(new org.cloudburstmc.protocol.common.DefinitionRegistry<>() {
             @Override
@@ -78,6 +78,8 @@ public class GeyserTranslatedUser extends OuranosSession {
         for (org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition definition : packet.getItems()) {
             builder1.add(new com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.definitions.SimpleItemDefinition(definition.getIdentifier(), definition.getRuntimeId(), ItemVersion.from(definition.getVersion().ordinal()), definition.isComponentBased(), definition.getComponentData()));
         }
+
+
     }
 
     @Override
