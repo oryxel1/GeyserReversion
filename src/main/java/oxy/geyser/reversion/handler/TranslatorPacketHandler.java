@@ -36,11 +36,13 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
         }
 
         this.clientProtocol = packet.getProtocolVersion();
-        super.handle(packet);
+
         if (GameProtocol.getBedrockCodec(this.clientProtocol) == null) {
             packet.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
             session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
         }
+
+        super.handle(packet);
 
         return PacketSignal.HANDLED;
     }
