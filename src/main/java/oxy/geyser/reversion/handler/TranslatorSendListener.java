@@ -63,10 +63,12 @@ public final class TranslatorSendListener extends UpstreamSession {
             this.user.encodeServer(packet, input);
 
             final int oldId = this.user.getCloudburstServerCodec().getPacketDefinition(packet.getClass()).getId();
-            if (!this.user.translateClientbound(input, output, oldId)) {
+            final Integer newId = this.user.translateClientbound(input, output, oldId);
+            if (newId == null) {
                 return null;
             }
-            return this.user.decodeClient(output, this.user.getCloudburstClientCodec().getPacketDefinition(packet.getClass()).getId());
+
+            return this.user.decodeClient(output, newId);
         } catch (Exception ignored) {
             ignored.printStackTrace();
         } finally {

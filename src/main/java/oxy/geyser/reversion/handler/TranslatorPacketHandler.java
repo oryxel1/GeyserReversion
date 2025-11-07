@@ -94,11 +94,12 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             this.user.encodeClient(packet, input);
 
             final int oldId = this.user.getCloudburstClientCodec().getPacketDefinition(packet.getClass()).getId();
-            if (!this.user.translateServerbound(input, output, oldId)) {
+            final Integer newId = this.user.translateServerbound(input, output, oldId);
+            if (newId == null) {
                 return PacketSignal.HANDLED;
             }
 
-            super.handlePacket(this.user.decodeServer(output, this.user.getCloudburstServerCodec().getPacketDefinition(packet.getClass()).getId()));
+            super.handlePacket(this.user.decodeServer(output, newId));
         } catch (Exception ignored) {
             ignored.printStackTrace();
         } finally {
