@@ -14,12 +14,9 @@ import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerOfflineHandler;
 import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerRateLimiter;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
-import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.v818.Bedrock_v818;
-import org.cloudburstmc.protocol.bedrock.data.EncodingSettings;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.api.event.bedrock.SessionLoginEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserPostInitializeEvent;
 import org.geysermc.geyser.api.extension.Extension;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
@@ -29,10 +26,9 @@ import org.geysermc.geyser.network.netty.handler.RakConnectionRequestHandler;
 import org.geysermc.geyser.network.netty.handler.RakGeyserRateLimiter;
 import org.geysermc.geyser.network.netty.handler.RakPingHandler;
 import org.geysermc.geyser.network.netty.proxy.ProxyServerHandler;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.network.helper.TransportHelper;
 import oxy.geyser.reversion.handler.init.TranslatorServerInitializer;
-import oxy.geyser.reversion.util.GeyserUtil;
+import oxy.geyser.reversion.util.CodecUtil;
 
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
@@ -41,19 +37,7 @@ import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_GLOBAL_
 import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_PACKET_LIMIT;
 
 public class GeyserReversion implements Extension {
-    public static BedrockCodec OLDEST_GEYSER_CODEC = fixCodec(Bedrock_v818.CODEC);
-    public static com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.BedrockCodec OLDEST_GEYSER_OXY_CODEC;
-    static {
-        com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.BedrockCodecHelper helper = com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v818.Bedrock_v818.CODEC.createHelper();
-        helper.setEncodingSettings(com.github.blackjack200.ouranos.shaded.protocol.bedrock.data.EncodingSettings.builder().maxListSize(Integer.MAX_VALUE).maxByteArraySize(Integer.MAX_VALUE).maxNetworkNBTSize(Integer.MAX_VALUE).maxItemNBTSize(Integer.MAX_VALUE).maxStringLength(Integer.MAX_VALUE).build());
-        OLDEST_GEYSER_OXY_CODEC = com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v818.Bedrock_v818.CODEC.toBuilder().helper(() -> helper).build();
-    }
-
-    private static BedrockCodec fixCodec(BedrockCodec codec) {
-        BedrockCodecHelper helper = codec.createHelper();
-        helper.setEncodingSettings(EncodingSettings.builder().maxListSize(Integer.MAX_VALUE).maxByteArraySize(Integer.MAX_VALUE).maxNetworkNBTSize(Integer.MAX_VALUE).maxItemNBTSize(Integer.MAX_VALUE).maxStringLength(Integer.MAX_VALUE).build());
-        return codec.toBuilder().helper(() -> helper).build();
-    }
+    public static BedrockCodec OLDEST_GEYSER_CODEC = CodecUtil.rebuildCodec(Bedrock_v818.CODEC);
 
     private static final TransportHelper.TransportType TRANSPORT = TransportHelper.TRANSPORT_TYPE;
 

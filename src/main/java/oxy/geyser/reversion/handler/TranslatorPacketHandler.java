@@ -1,24 +1,33 @@
 package oxy.geyser.reversion.handler;
 
 import com.github.blackjack200.ouranos.ProtocolInfo;
+import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v589.Bedrock_v589;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
+import net.raphimc.minecraftauth.step.bedrock.StepMCChain;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
-import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
-import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
-import org.cloudburstmc.protocol.bedrock.packet.RequestNetworkSettingsPacket;
+import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.PacketSignal;
 import org.geysermc.geyser.GeyserImpl;
+import org.geysermc.geyser.api.event.bedrock.SessionInitializeEvent;
+import org.geysermc.geyser.event.type.SessionLoadResourcePacksEventImpl;
 import org.geysermc.geyser.network.GameProtocol;
-import org.geysermc.geyser.network.UpstreamPacketHandler;
+import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.auth.AuthData;
+import org.geysermc.geyser.text.GeyserLocale;
+import org.geysermc.geyser.util.LoginEncryptionUtils;
 import oxy.geyser.reversion.DuplicatedProtocolInfo;
 import oxy.geyser.reversion.GeyserReversion;
+import oxy.geyser.reversion.handler.duplicated.UpstreamPacketHandler;
 import oxy.geyser.reversion.session.GeyserTranslatedUser;
+import oxy.geyser.reversion.util.ClientDataUtil;
 import oxy.geyser.reversion.util.GeyserUtil;
+import oxy.geyser.reversion.util.PendingBedrockAuthentication;
 
-import java.lang.reflect.Field;
+import java.util.UUID;
 
 public final class TranslatorPacketHandler extends UpstreamPacketHandler {
     @Getter
@@ -55,16 +64,6 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
     public PacketSignal handle(LoginPacket packet) {
         if (this.clientProtocol == -1) { // Older versions don't send RequestNetworkSettingsPacket, handle it ourselves!
             this.clientProtocol = packet.getProtocolVersion();
-
-            // Ughhhh, reflection... ugly.
-            try {
-                final Field field = UpstreamPacketHandler.class.getDeclaredField("networkSettingsRequested");
-                field.setAccessible(true);
-                field.set(this, true);
-            } catch (Exception exception) {
-                session.disconnect("Some expection occured when you trying to join!");
-                throw new RuntimeException(exception);
-            }
         }
 
         final int pv = packet.getProtocolVersion();
@@ -79,7 +78,113 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             GeyserUtil.hook(session);
         }
 
-        return super.handle(packet);
+        // The player is using the version before authentication change, damn it. Let's handle this ourselves...
+        if (this.clientProtocol < Bedrock_v589.CODEC.getProtocolVersion()) {
+            if (geyser.isShuttingDown() || geyser.isReloading()) {
+                // Don't allow new players in if we're no longer operating
+                session.disconnect(GeyserLocale.getLocaleStringLog("geyser.core.shutdown.kick.message"));
+                return PacketSignal.HANDLED;
+            }
+
+            if (geyser.getSessionManager().reachedMaxConnectionsPerAddress(session)) {
+                session.disconnect("Too many connections are originating from this location!");
+                return PacketSignal.HANDLED;
+            }
+
+            // Set the block translation based off of version
+            session.setBlockMappings(BlockRegistries.BLOCKS.forVersion(packet.getProtocolVersion()));
+            session.setItemMappings(Registries.ITEMS.forVersion(packet.getProtocolVersion()));
+
+            // Call this just to set the client data lol...
+            ClientDataUtil.setClientData(session, packet);
+
+            if (session.isClosed()) {
+                return PacketSignal.HANDLED;
+            }
+
+            PlayStatusPacket playStatus = new PlayStatusPacket();
+            playStatus.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
+            session.sendUpstreamPacket(playStatus);
+
+            this.resourcePackLoadEvent = new SessionLoadResourcePacksEventImpl(session);
+            this.geyser.eventBus().fireEventElseKick(this.resourcePackLoadEvent, session);
+            if (session.isClosed()) {
+                // Can happen if an error occurs in the resource pack event; that'll disconnect the player
+                return PacketSignal.HANDLED;
+            }
+
+            // Let's just send player stuff, don't spawn them in yet....
+            ResourcePacksInfoPacket resourcePacksInfo = new ResourcePacksInfoPacket();
+            resourcePacksInfo.getResourcePackInfos().addAll(this.resourcePackLoadEvent.infoPacketEntries());
+            resourcePacksInfo.setVibrantVisualsForceDisabled(!session.isAllowVibrantVisuals());
+
+            resourcePacksInfo.setForcedToAccept(GeyserImpl.getInstance().getConfig().isForceResourcePacks());
+            resourcePacksInfo.setWorldTemplateId(UUID.randomUUID());
+            resourcePacksInfo.setWorldTemplateVersion("*");
+            session.sendUpstreamPacket(resourcePacksInfo);
+
+            GeyserLocale.loadGeyserLocale(session.locale());
+            return PacketSignal.HANDLED;
+        }
+
+        super.handle(packet);
+        if (!session.getUpstream().isClosed() && this.user != null) {
+            this.user.setAuthenticated(true);
+        }
+
+        return PacketSignal.HANDLED;
+    }
+
+    @Override
+    public PacketSignal handle(ResourcePackClientResponsePacket packet) {
+        if (session.getUpstream().isClosed() || session.isClosed()) {
+            return PacketSignal.HANDLED;
+        }
+
+        if (this.clientProtocol >= Bedrock_v589.CODEC.getProtocolVersion() || packet.getStatus() != ResourcePackClientResponsePacket.Status.COMPLETED) {
+            return super.handle(packet); // New authentication supported, allow them to login!
+        }
+
+        if (this.finishedResourcePackSending) {
+            session.disconnect("Illegal duplicate resource pack response packet received!");
+            return PacketSignal.HANDLED;
+        }
+
+        this.finishedResourcePackSending = true;
+        session.connect(); // We have to spawn player in the void world!
+        this.authenticate();
+
+        return PacketSignal.HANDLED;
+    }
+
+
+    private void authenticate() {
+        // This just looks cool - idk
+        // Yes it does! (oxy)
+        SetTimePacket packet = new SetTimePacket();
+        packet.setTime(16000);
+        session.sendUpstreamPacket(packet);
+
+        this.user.pendingBedrockAuthentication = new PendingBedrockAuthentication.AuthenticationTask(120);
+        this.user.pendingBedrockAuthentication.resetRunningFlow();
+        this.user.pendingBedrockAuthentication.performLoginAttempt(code -> LoginEncryptionUtils.buildAndShowMicrosoftCodeWindow(this.session, code)).handle((r, e) -> onMicrosoftLoginComplete(this.user.pendingBedrockAuthentication));
+    }
+
+    public boolean onMicrosoftLoginComplete(PendingBedrockAuthentication.AuthenticationTask task) {
+        return task.getAuthentication().handle((result, ex) -> {
+            StepMCChain.MCChain mcChain = result.session().getMcChain();
+
+            session.setAuthData(new AuthData(mcChain.getDisplayName(), mcChain.getId(), mcChain.getXuid(), session.getAuthData().issuedAt()));
+            geyser.getSessionManager().addPendingSession(session);
+            geyser.eventBus().fire(new SessionInitializeEvent(session));
+
+            this.user.setAuthenticated(true);
+            session.authenticate(session.getAuthData().name());
+
+            session.closeForm();
+            session.sendUpstreamPacket(new ClientboundCloseFormPacket()); // Send again this just in case....
+            return true;
+        }).getNow(false);
     }
 
     @Override
