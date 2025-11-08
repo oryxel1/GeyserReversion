@@ -165,9 +165,14 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
         packet.setTime(16000);
         session.sendUpstreamPacket(packet);
 
-        this.user.pendingBedrockAuthentication = new PendingBedrockAuthentication.AuthenticationTask(120);
-        this.user.pendingBedrockAuthentication.resetRunningFlow();
-        this.user.pendingBedrockAuthentication.performLoginAttempt(code -> LoginEncryptionUtils.buildAndShowMicrosoftCodeWindow(this.session, code)).handle((r, e) -> onMicrosoftLoginComplete(this.user.pendingBedrockAuthentication));
+        final PendingBedrockAuthentication.AuthenticationTask task = GeyserReversion.AUTH.getOrCreateTask(session.getAuthData().xuid());
+
+        if (task.getAuthentication() != null && task.getAuthentication().isDone()) {
+            onMicrosoftLoginComplete(task);
+        } else {
+            task.resetRunningFlow();
+            task.performLoginAttempt(code -> LoginEncryptionUtils.buildAndShowMicrosoftCodeWindow(this.session, code)).handle((r, e) -> onMicrosoftLoginComplete(task));
+        }
     }
 
     public boolean onMicrosoftLoginComplete(PendingBedrockAuthentication.AuthenticationTask task) {

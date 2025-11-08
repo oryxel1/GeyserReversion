@@ -29,7 +29,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import net.lenni0451.commons.httpclient.HttpClient;
 import net.raphimc.minecraftauth.MinecraftAuth;
@@ -63,15 +62,42 @@ public class PendingBedrockAuthentication {
             .sisuTitleAuthentication(MicrosoftConstants.BEDROCK_XSTS_RELYING_PARTY)
             .buildMinecraftBedrockChainStep(true, false);
 
-    public static class AuthenticationTask {
+    private final LoadingCache<String, AuthenticationTask> authentications;
+
+    public PendingBedrockAuthentication() {
+        this.authentications = CacheBuilder.newBuilder()
+            .build(new CacheLoader<>() {
+                    @Override
+                    public AuthenticationTask load(@NonNull String userKey) {
+                        return new AuthenticationTask(userKey, 120);
+                    }
+        });
+    }
+
+    @SneakyThrows(ExecutionException.class)
+    public AuthenticationTask getOrCreateTask(@NonNull String userKey) {
+        return authentications.get(userKey);
+    }
+
+    public class AuthenticationTask {
         private static final Executor DELAYED_BY_ONE_SECOND = CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS);
 
         private final int timeoutSec;
         @Getter
         private CompletableFuture<StepChainResult> authentication;
+        private final String userKey;
 
-        public AuthenticationTask(int timeoutSec) {
+        public AuthenticationTask(String userKey, int timeoutSec) {
+            this.userKey = userKey;
             this.timeoutSec = timeoutSec;
+        }
+
+        public void cleanup() {
+            GeyserLogger logger = GeyserImpl.getInstance().getLogger();
+            if (logger.isDebug()) {
+                logger.debug("Cleaning up authentication task for " + userKey);
+            }
+            authentications.invalidate(userKey);
         }
 
         public void resetRunningFlow() {
@@ -91,7 +117,10 @@ public class PendingBedrockAuthentication {
                 } catch (Exception e) {
                     throw new CompletionException(e);
                 }
-            }, DELAYED_BY_ONE_SECOND);
+            }, DELAYED_BY_ONE_SECOND).whenComplete((r, ex) -> {
+                // avoid memory leak, in case player doesn't connect again
+                CompletableFuture.delayedExecutor(timeoutSec, TimeUnit.SECONDS).execute(this::cleanup);
+            });
         }
     }
 

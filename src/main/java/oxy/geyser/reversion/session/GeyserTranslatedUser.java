@@ -26,7 +26,6 @@ public class GeyserTranslatedUser extends SpecialOuranosSession {
     private final BedrockCodecHelper cloudburstServerCodecHelper;
 
     private boolean authenticated;
-    public PendingBedrockAuthentication.AuthenticationTask pendingBedrockAuthentication;
 
     public GeyserTranslatedUser(int protocolVersion, int serverVersion, GeyserSession session) {
         super(protocolVersion, serverVersion);
