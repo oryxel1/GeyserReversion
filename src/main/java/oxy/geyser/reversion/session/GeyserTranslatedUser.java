@@ -4,6 +4,7 @@ import com.github.blackjack200.ouranos.session.SpecialOuranosSession;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
+import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
@@ -12,8 +13,9 @@ import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
 import oxy.geyser.reversion.DuplicatedProtocolInfo;
+import oxy.geyser.reversion.util.PendingBedrockAuthentication;
 
-@Getter
+@Getter @Setter
 public class GeyserTranslatedUser extends SpecialOuranosSession {
     private final GeyserSession session;
 
@@ -22,6 +24,9 @@ public class GeyserTranslatedUser extends SpecialOuranosSession {
 
     private final BedrockCodec cloudburstServerCodec;
     private final BedrockCodecHelper cloudburstServerCodecHelper;
+
+    private boolean authenticated;
+    public PendingBedrockAuthentication.AuthenticationTask pendingBedrockAuthentication;
 
     public GeyserTranslatedUser(int protocolVersion, int serverVersion, GeyserSession session) {
         super(protocolVersion, serverVersion);
