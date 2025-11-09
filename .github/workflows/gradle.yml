@@ -29,7 +29,7 @@ jobs:
           name: Artifacts
           path: build/libs/
           if-no-files-found: error
-#      - name: Publish to Modrinth
-#        env:
-#          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-#        run: ./gradlew modrinth
+      - name: Publish to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: ./gradlew modrinth
