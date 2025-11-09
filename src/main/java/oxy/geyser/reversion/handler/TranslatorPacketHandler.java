@@ -131,7 +131,7 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
         }
 
         super.handle(packet);
-        if (!session.getUpstream().isClosed() && this.user != null) {
+        if (this.user != null) {
             this.user.setAuthenticated(true);
         }
 
@@ -155,11 +155,17 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
 
         this.finishedResourcePackSending = true;
         session.connect(); // We have to spawn player in the void world!
-        this.authenticate();
 
         return PacketSignal.HANDLED;
     }
 
+    @Override
+    public PacketSignal handle(SetLocalPlayerAsInitializedPacket packet) {
+        if (this.user != null && !this.user.isAuthenticated()) {
+            this.authenticate();
+        }
+        return super.handle(packet);
+    }
 
     private void authenticate() {
         // This just looks cool - idk
