@@ -1,6 +1,6 @@
 package oxy.geyser.reversion;
 
-import com.github.blackjack200.ouranos.ProtocolInfo;
+import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v575.Bedrock_v575;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -9,6 +9,8 @@ import io.netty.util.NettyRuntime;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.internal.SystemPropertyUtil;
 import lombok.SneakyThrows;
+import net.lenni0451.classtransform.TransformerManager;
+import net.lenni0451.reflect.Agents;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerOfflineHandler;
@@ -18,7 +20,9 @@ import org.cloudburstmc.protocol.bedrock.codec.v818.Bedrock_v818;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserPostInitializeEvent;
+import org.geysermc.geyser.api.event.lifecycle.GeyserPreInitializeEvent;
 import org.geysermc.geyser.api.extension.Extension;
+import org.geysermc.geyser.api.extension.ExtensionLogger;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
 import org.geysermc.geyser.network.netty.Bootstraps;
 import org.geysermc.geyser.network.netty.GeyserServer;
@@ -27,8 +31,12 @@ import org.geysermc.geyser.network.netty.handler.RakGeyserRateLimiter;
 import org.geysermc.geyser.network.netty.handler.RakPingHandler;
 import org.geysermc.geyser.network.netty.proxy.ProxyServerHandler;
 import org.geysermc.mcprotocollib.network.helper.TransportHelper;
+import oxy.geyser.reversion.config.Config;
+import oxy.geyser.reversion.config.ConfigLoader;
 import oxy.geyser.reversion.handler.init.TranslatorServerInitializer;
+import oxy.geyser.reversion.transformer.BaseBedrockCodecHelperTransformer;
 import oxy.geyser.reversion.util.CodecUtil;
+import oxy.geyser.reversion.util.GeyserExtensionClassProvider;
 import oxy.geyser.reversion.util.PendingBedrockAuthentication;
 
 import java.lang.reflect.Field;
@@ -38,17 +46,38 @@ import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_GLOBAL_
 import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_PACKET_LIMIT;
 
 public class GeyserReversion implements Extension {
+    public static ExtensionLogger LOGGER;
+
     public static BedrockCodec OLDEST_GEYSER_CODEC = CodecUtil.rebuildCodec(Bedrock_v818.CODEC);
 
     private static final TransportHelper.TransportType TRANSPORT = TransportHelper.TRANSPORT_TYPE;
 
     public static PendingBedrockAuthentication AUTH = new PendingBedrockAuthentication();
 
+    public static Config CONFIG;
+
+    public static boolean INJECTION_FAILED = false;
+    @Subscribe
+    public void onGeyserPreInitializeEvent(GeyserPreInitializeEvent event) {
+        LOGGER = this.logger();
+        try {
+            TransformerManager transformerManager = new TransformerManager(new GeyserExtensionClassProvider());
+            transformerManager.addTransformer(BaseBedrockCodecHelperTransformer.class.getName());
+            transformerManager.hookInstrumentation(Agents.getInstrumentation());
+        } catch (Exception e) {
+            INJECTION_FAILED = true;
+            throw new RuntimeException("CODE INJECTION FAILED! ANY VERSION BELOW " + Bedrock_v575.CODEC.getMinecraftVersion() + " WILL NOT BE SUPPORTED!", e);
+        }
+    }
+
     // Fucking hell.
     @SneakyThrows
     @Subscribe
     public void onGeyserPostInitializeEvent(GeyserPostInitializeEvent event) {
+        CONFIG = ConfigLoader.load(this, GeyserReversion.class, Config.class);
+
         final GeyserImpl geyser = GeyserImpl.getInstance();
+        // We have to kill off the server then restart again :D to use our packet handler...
         geyser.getGeyserServer().shutdown();
 
         Integer bedrockThreadCount = Integer.getInteger("Geyser.BedrockNetworkThreads");

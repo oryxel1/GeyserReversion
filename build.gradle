@@ -9,13 +9,6 @@ version = '1.0'
 repositories {
     mavenCentral()
     maven {url = "https://repo.opencollab.dev/main/"}
-//    maven {
-//        url = "https://jitpack.io"
-//
-//        content {
-//            includeGroupByRegex "com\\.github\\..+"
-//        }
-//    }
 }
 
 
@@ -31,6 +24,10 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.0")
+
+    implementation("net.lenni0451.classtransform:core:1.14.1")
+    implementation("net.lenni0451:Reflect:1.5.0")
 }
 
 shadowJar {
@@ -39,7 +36,19 @@ shadowJar {
         include(dependency("com.fasterxml.jackson.core:jackson-databind:2.17.0"))
         include(dependency("com.fasterxml.jackson.core:jackson-annotations:2.17.0"))
         include(dependency("com.fasterxml.jackson.core:jackson-core:2.17.0"))
+        include(dependency("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.0"))
+
+        include(dependency("net.lenni0451.classtransform:core:1.14.1"))
+        include(dependency("net.lenni0451:Reflect:1.5.0"))
+
+        include(dependency("org.ow2.asm:asm:9.8"))
+        include(dependency("org.ow2.asm:asm-analysis:9.8"))
+        include(dependency("org.ow2.asm:asm-commons:9.8"))
+        include(dependency("org.ow2.asm:asm-tree:9.8"))
     }
 
     relocate("com.fasterxml.jackson", "oxy.geyser.reversion.shaded.jackson")
+    relocate('org.objectweb.asm', 'oxy.geyser.reversion.shaded.asm')
+    relocate('net.lenni0451.reflect', 'oxy.geyser.reversion.shaded.reflect')
+    relocate('net.lenni0451.classtransform', 'oxy.geyser.reversion.shaded.classtransform')
 }

@@ -1,11 +1,13 @@
 package oxy.geyser.reversion.handler;
 
 import com.github.blackjack200.ouranos.ProtocolInfo;
+import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v575.Bedrock_v575;
 import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v589.Bedrock_v589;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
 import net.raphimc.minecraftauth.step.bedrock.StepMCChain;
+import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.PacketSignal;
@@ -27,6 +29,7 @@ import oxy.geyser.reversion.util.ClientDataUtil;
 import oxy.geyser.reversion.util.GeyserUtil;
 import oxy.geyser.reversion.util.PendingBedrockAuthentication;
 
+import java.util.List;
 import java.util.UUID;
 
 public final class TranslatorPacketHandler extends UpstreamPacketHandler {
@@ -170,24 +173,26 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
         if (task.getAuthentication() != null && task.getAuthentication().isDone()) {
             onMicrosoftLoginComplete(task);
         } else {
+            System.out.println("Login....!");
             task.resetRunningFlow();
             task.performLoginAttempt(code -> LoginEncryptionUtils.buildAndShowMicrosoftCodeWindow(this.session, code)).handle((r, e) -> onMicrosoftLoginComplete(task));
         }
     }
 
     public boolean onMicrosoftLoginComplete(PendingBedrockAuthentication.AuthenticationTask task) {
+        task.cleanup();
         return task.getAuthentication().handle((result, ex) -> {
+            this.session.closeForm();
+            this.session.sendUpstreamPacket(new ClientboundCloseFormPacket()); // Send again this just in case...
+
             StepMCChain.MCChain mcChain = result.session().getMcChain();
 
-            session.setAuthData(new AuthData(mcChain.getDisplayName(), mcChain.getId(), mcChain.getXuid(), session.getAuthData().issuedAt()));
-            geyser.getSessionManager().addPendingSession(session);
-            geyser.eventBus().fire(new SessionInitializeEvent(session));
+            this.session.setAuthData(new AuthData(mcChain.getDisplayName(), mcChain.getId(), mcChain.getXuid(), this.session.getAuthData().issuedAt()));
+            geyser.getSessionManager().addPendingSession(this.session);
+            geyser.eventBus().fire(new SessionInitializeEvent(this.session));
 
             this.user.setAuthenticated(true);
-            session.authenticate(session.getAuthData().name());
-
-            session.closeForm();
-            session.sendUpstreamPacket(new ClientboundCloseFormPacket()); // Send again this just in case....
+            this.session.authenticate(session.getAuthData().name());
             return true;
         }).getNow(false);
     }
@@ -210,8 +215,10 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             }
 
             super.handlePacket(this.user.decodeServer(output, newId));
-        } catch (Exception ignored) {
-            ignored.printStackTrace();
+        } catch (Exception exception) {
+            if (GeyserReversion.CONFIG.debugMode()) {
+                GeyserReversion.LOGGER.severe("Failed to translate " + packet.getPacketType() + " (serverbound)!", exception);
+            }
         } finally {
             input.release();
             output.release();
@@ -220,9 +227,30 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
     }
 
     private boolean checkCodec(int protocolVersion) {
+        int minProtocolVer = GeyserReversion.CONFIG.minProtocolId();
+        if (GeyserReversion.INJECTION_FAILED) {
+            minProtocolVer = Math.max(Bedrock_v575.CODEC.getProtocolVersion(), minProtocolVer);
+        }
+
+        if (minProtocolVer != -1) {
+            BedrockCodec codec = DuplicatedProtocolInfo.getPacketCodec(minProtocolVer);
+            if (codec != null && protocolVersion < minProtocolVer) {
+                session.getUpstream().getSession().setCodec(BedrockCompat.disconnectCompat(protocolVersion));
+                session.disconnect(GeyserReversion.CONFIG.minProtocolKick().replace("%version%", codec.getMinecraftVersion()));
+                return true;
+            }
+        }
+
+        List<Integer> blockProtocols = GeyserReversion.CONFIG.blockProtocols();
+        if (blockProtocols != null && blockProtocols.contains(protocolVersion)) {
+            session.getUpstream().getSession().setCodec(BedrockCompat.disconnectCompat(protocolVersion));
+            session.disconnect(GeyserReversion.CONFIG.blockedProtocolKick());
+            return true;
+        }
+
         if (ProtocolInfo.getPacketCodec(protocolVersion) == null && GameProtocol.getBedrockCodec(protocolVersion) == null) {
             session.getUpstream().getSession().setCodec(BedrockCompat.disconnectCompat(protocolVersion));
-            session.disconnect("Eh your version is old as hell, please update (PV: " + protocolVersion + ").");
+            session.disconnect(GeyserReversion.CONFIG.versionNotSupportedKick());
             return true;
         }
 

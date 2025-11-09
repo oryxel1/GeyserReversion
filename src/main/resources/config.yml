@@ -1,0 +1,21 @@
+# Print out errors and other stuff to the console, should not be enabled unless you do need to debug something.
+debug-mode: false
+
+# Protocol version that is blocked, this IS NOT minecraft but protocol version, If you want to check for example
+# what protocol id for 1.21.80 is, go on https://minecraft.wiki and search up "Bedrock <version>" and check "Protocol version"
+# Then add it here, if this list is empty, all version can join (if it's supported).
+blocked-protocols: []
+
+# The min protocol version that is supported, to check what protocol version is, read the comments about "blocked-protocols"
+# Any version that use a protocol version smaller than this protocol id set here, will be kick, for example if this is set to
+# 712 (1.21.20) then any version below that will be kick. If you want to support all versions, then set this to -1.
+min-protocol-id: -1
+
+# The message when the player get kick from "min-protocol-id" option.
+min-protocol-kick: "Your version is not supported, please use at least %version% to join!"
+
+# If this version is literally not supported by this extension, which is old as hell... this message will pop up.
+version-not-supported-kick: "Your version is outdated, please update!"
+
+# Message to show up when a player join using a blocked protocol.
+block-protocol-kick: "Your version of Minecraft is not blocked by the server! Please contact the server admin if you think this is a mistake!"
