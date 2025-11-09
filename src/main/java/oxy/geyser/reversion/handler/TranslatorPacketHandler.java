@@ -173,7 +173,6 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
         if (task.getAuthentication() != null && task.getAuthentication().isDone()) {
             onMicrosoftLoginComplete(task);
         } else {
-            System.out.println("Login....!");
             task.resetRunningFlow();
             task.performLoginAttempt(code -> LoginEncryptionUtils.buildAndShowMicrosoftCodeWindow(this.session, code)).handle((r, e) -> onMicrosoftLoginComplete(task));
         }
