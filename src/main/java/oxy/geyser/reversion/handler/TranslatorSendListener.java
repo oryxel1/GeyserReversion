@@ -69,8 +69,10 @@ public final class TranslatorSendListener extends UpstreamSession {
             }
 
             return this.user.decodeClient(output, newId);
-        } catch (Exception ignored) {
-            ignored.printStackTrace();
+        } catch (Exception exception) {
+            if (GeyserReversion.CONFIG.debugMode()) {
+                GeyserReversion.LOGGER.severe("Failed to translate " + packet.getPacketType() + " (clientbound)!", exception);
+            }
         } finally {
             input.release();
             output.release();

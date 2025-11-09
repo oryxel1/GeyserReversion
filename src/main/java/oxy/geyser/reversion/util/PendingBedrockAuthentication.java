@@ -101,7 +101,7 @@ public class PendingBedrockAuthentication {
         }
 
         public void resetRunningFlow() {
-            if (authentication == null) {
+            if (this.authentication == null) {
                 return;
             }
 
@@ -110,7 +110,7 @@ public class PendingBedrockAuthentication {
         }
 
         public CompletableFuture<StepChainResult> performLoginAttempt(Consumer<StepMsaDeviceCode.MsaDeviceCode> deviceCodeConsumer) {
-            return authentication = CompletableFuture.supplyAsync(() -> {
+            return this.authentication = CompletableFuture.supplyAsync(() -> {
                 try {
                     StepFullBedrockSession step = AUTH_FLOW.apply(false, timeoutSec);
                     return new StepChainResult(step, step.getFromInput(MinecraftAuthLogger.INSTANCE, AUTH_CLIENT, new StepMsaDeviceCode.MsaDeviceCodeCallback(deviceCodeConsumer)));
@@ -119,7 +119,7 @@ public class PendingBedrockAuthentication {
                 }
             }, DELAYED_BY_ONE_SECOND).whenComplete((r, ex) -> {
                 // avoid memory leak, in case player doesn't connect again
-                CompletableFuture.delayedExecutor(timeoutSec, TimeUnit.SECONDS).execute(this::cleanup);
+                CompletableFuture.delayedExecutor(this.timeoutSec, TimeUnit.SECONDS).execute(this::cleanup);
             });
         }
     }

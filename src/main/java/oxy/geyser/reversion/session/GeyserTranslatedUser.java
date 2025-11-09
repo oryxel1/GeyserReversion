@@ -13,7 +13,7 @@ import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
 import oxy.geyser.reversion.DuplicatedProtocolInfo;
-import oxy.geyser.reversion.util.PendingBedrockAuthentication;
+import oxy.geyser.reversion.GeyserReversion;
 
 @Getter @Setter
 public class GeyserTranslatedUser extends SpecialOuranosSession {
@@ -26,6 +26,11 @@ public class GeyserTranslatedUser extends SpecialOuranosSession {
     private final BedrockCodecHelper cloudburstServerCodecHelper;
 
     private boolean authenticated;
+
+    public void setAuthenticated(boolean authenticated) {
+        this.authenticated = authenticated;
+        GeyserReversion.LOGGER.info("Player with username " + session.getAuthData().name() + " joined using Minecraft version " + this.cloudburstClientCodec.getMinecraftVersion() + "!");
+    }
 
     public GeyserTranslatedUser(int protocolVersion, int serverVersion, GeyserSession session) {
         super(protocolVersion, serverVersion);
