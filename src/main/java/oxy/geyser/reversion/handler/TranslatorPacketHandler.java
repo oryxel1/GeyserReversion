@@ -174,7 +174,7 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
         packet.setTime(16000);
         session.sendUpstreamPacket(packet);
 
-        final PendingBedrockAuthentication.AuthenticationTask task = GeyserReversion.AUTH.getOrCreateTask(session.getAuthData().xuid());
+        final PendingBedrockAuthentication.AuthenticationTask task = GeyserReversion.AUTH.getOrCreateTask(session.getAuthData().xuid() + "-" + session.getAuthData().uuid() + "-" + session.getAuthData().name());
 
         if (task.getAuthentication() != null && task.getAuthentication().isDone()) {
             onMicrosoftLoginComplete(task);
