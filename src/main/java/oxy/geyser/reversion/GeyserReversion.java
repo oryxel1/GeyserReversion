@@ -35,6 +35,7 @@ import oxy.geyser.reversion.config.Config;
 import oxy.geyser.reversion.config.ConfigLoader;
 import oxy.geyser.reversion.handler.init.TranslatorServerInitializer;
 import oxy.geyser.reversion.transformer.BaseBedrockCodecHelperTransformer;
+import oxy.geyser.reversion.util.ClassLoaderPriorityUtil;
 import oxy.geyser.reversion.util.CodecUtil;
 import oxy.geyser.reversion.util.GeyserExtensionClassProvider;
 import oxy.geyser.reversion.util.PendingBedrockAuthentication;
@@ -60,6 +61,7 @@ public class GeyserReversion implements Extension {
     @Subscribe
     public void onGeyserPreInitializeEvent(GeyserPreInitializeEvent event) {
         LOGGER = this.logger();
+        ClassLoaderPriorityUtil.loadOverridingJars(this);
         try {
             TransformerManager transformerManager = new TransformerManager(new GeyserExtensionClassProvider());
             transformerManager.addTransformer(BaseBedrockCodecHelperTransformer.class.getName());
