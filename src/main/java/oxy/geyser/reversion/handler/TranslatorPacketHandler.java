@@ -180,11 +180,19 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             onMicrosoftLoginComplete(task);
         } else {
             task.resetRunningFlow();
-            task.performLoginAttempt(code -> LoginEncryptionUtils.buildAndShowMicrosoftCodeWindow(this.session, code)).handle((r, e) -> onMicrosoftLoginComplete(task));
+            task.performLoginAttempt(code -> {
+                if (!this.session.isClosed()) {
+                    LoginEncryptionUtils.buildAndShowMicrosoftCodeWindow(this.session, code);
+                }
+            }).handle((r, e) -> onMicrosoftLoginComplete(task));
         }
     }
 
     public boolean onMicrosoftLoginComplete(PendingBedrockAuthentication.AuthenticationTask task) {
+        if (session.isClosed()) {
+            return true;
+        }
+
         task.cleanup();
         return task.getAuthentication().handle((result, ex) -> {
             this.session.closeForm();
