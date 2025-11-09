@@ -30,11 +30,6 @@ public class ClientDataUtil {
 
             ChainValidationResult result = EncryptionUtils.validatePayload(packet.getAuthPayload());
 
-            if (result.identityClaims().extraData.xuid.isEmpty() && !session.getGeyser().getConfig().isEnableProxyConnections()) {
-                session.disconnect(GeyserLocale.getLocaleStringLog("geyser.network.remote.invalid_xbox_account"));
-                return;
-            }
-
             // Should always be present, but hey, why not make it safe :D
             Long rawIssuedAt = (Long) result.rawIdentityClaims().get("iat");
             long issuedAt = rawIssuedAt != null ? rawIssuedAt : -1;
