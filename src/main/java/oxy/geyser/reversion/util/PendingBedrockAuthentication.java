@@ -30,23 +30,20 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import net.lenni0451.commons.httpclient.HttpClient;
-import net.raphimc.minecraftauth.MinecraftAuth;
-import net.raphimc.minecraftauth.step.bedrock.session.StepFullBedrockSession;
-import net.raphimc.minecraftauth.step.msa.StepMsaDeviceCode;
-import net.raphimc.minecraftauth.util.MicrosoftConstants;
+import net.raphimc.minecraftauth.bedrock.BedrockAuthManager;
+import net.raphimc.minecraftauth.msa.model.MsaDeviceCode;
+import net.raphimc.minecraftauth.msa.service.impl.DeviceCodeMsaAuthService;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.GeyserLogger;
+import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.session.PendingMicrosoftAuthentication;
-import org.geysermc.geyser.util.MinecraftAuthLogger;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 /**
@@ -54,14 +51,6 @@ import java.util.function.Consumer;
  * It permits user to exit the server while they authorize Geyser to access their Microsoft account.
  */
 public class PendingBedrockAuthentication {
-    public static final HttpClient AUTH_CLIENT = PendingMicrosoftAuthentication.AUTH_CLIENT;
-    public static final BiFunction<Boolean, Integer, StepFullBedrockSession> AUTH_FLOW = (offlineAccess, timeoutSec) -> MinecraftAuth.builder()
-            .withClientId(MicrosoftConstants.BEDROCK_ANDROID_TITLE_ID).withScope(MicrosoftConstants.SCOPE_TITLE_AUTH)
-            .deviceCode()
-            .withDeviceToken("Android")
-            .sisuTitleAuthentication(MicrosoftConstants.BEDROCK_XSTS_RELYING_PARTY)
-            .buildMinecraftBedrockChainStep(true, false);
-
     private final LoadingCache<String, AuthenticationTask> authentications;
 
     public PendingBedrockAuthentication() {
@@ -69,7 +58,7 @@ public class PendingBedrockAuthentication {
             .build(new CacheLoader<>() {
                     @Override
                     public AuthenticationTask load(@NonNull String userKey) {
-                        return new AuthenticationTask(userKey, 120);
+                        return new AuthenticationTask(userKey, GeyserImpl.getInstance().getConfig().getPendingAuthenticationTimeout());
                     }
         });
     }
@@ -84,7 +73,7 @@ public class PendingBedrockAuthentication {
 
         private final int timeoutSec;
         @Getter
-        private CompletableFuture<StepChainResult> authentication;
+        private CompletableFuture<BedrockAuthManager> authentication;
         private final String userKey;
 
         public AuthenticationTask(String userKey, int timeoutSec) {
@@ -109,11 +98,13 @@ public class PendingBedrockAuthentication {
             this.authentication.cancel(true);
         }
 
-        public CompletableFuture<StepChainResult> performLoginAttempt(Consumer<StepMsaDeviceCode.MsaDeviceCode> deviceCodeConsumer) {
+        public CompletableFuture<BedrockAuthManager> performLoginAttempt(Consumer<MsaDeviceCode> deviceCodeConsumer) {
             return this.authentication = CompletableFuture.supplyAsync(() -> {
                 try {
-                    StepFullBedrockSession step = AUTH_FLOW.apply(false, timeoutSec);
-                    return new StepChainResult(step, step.getFromInput(MinecraftAuthLogger.INSTANCE, AUTH_CLIENT, new StepMsaDeviceCode.MsaDeviceCodeCallback(deviceCodeConsumer)));
+                    BedrockAuthManager auth = BedrockAuthManager.create(PendingMicrosoftAuthentication.AUTH_CLIENT, GameProtocol.DEFAULT_BEDROCK_VERSION).login(DeviceCodeMsaAuthService::new, deviceCodeConsumer);
+                    auth.getMinecraftCertificateChain().refresh();
+                    auth.getMinecraftMultiplayerToken().refresh();
+                    return auth;
                 } catch (Exception e) {
                     throw new CompletionException(e);
                 }
@@ -122,8 +113,5 @@ public class PendingBedrockAuthentication {
                 CompletableFuture.delayedExecutor(this.timeoutSec, TimeUnit.SECONDS).execute(this::cleanup);
             });
         }
-    }
-
-    public record StepChainResult(StepFullBedrockSession step, StepFullBedrockSession.FullBedrockSession session) {
     }
 }

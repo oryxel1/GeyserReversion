@@ -6,7 +6,7 @@ import com.github.blackjack200.ouranos.shaded.protocol.bedrock.codec.v589.Bedroc
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.Getter;
-import net.raphimc.minecraftauth.step.bedrock.StepMCChain;
+import net.raphimc.minecraftauth.bedrock.model.MinecraftMultiplayerToken;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
 import org.cloudburstmc.protocol.bedrock.packet.*;
@@ -198,9 +198,8 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             this.session.closeForm();
             this.session.sendUpstreamPacket(new ClientboundCloseFormPacket()); // Send again this just in case...
 
-            StepMCChain.MCChain mcChain = result.session().getMcChain();
-
-            this.session.setAuthData(new AuthData(mcChain.getDisplayName(), mcChain.getId(), mcChain.getXuid(), this.session.getAuthData().issuedAt()));
+            MinecraftMultiplayerToken token = result.getMinecraftMultiplayerToken().getCached();
+            this.session.setAuthData(new AuthData(token.getDisplayName(), token.getUuid(), token.getXuid(), this.session.getAuthData().issuedAt()));
             geyser.getSessionManager().addPendingSession(this.session);
             geyser.eventBus().fire(new SessionInitializeEvent(this.session));
 

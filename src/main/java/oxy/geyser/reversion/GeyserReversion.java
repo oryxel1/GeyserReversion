@@ -70,6 +70,14 @@ public class GeyserReversion implements Extension {
             INJECTION_FAILED = true;
             throw new RuntimeException("CODE INJECTION FAILED! ANY VERSION BELOW " + Bedrock_v575.CODEC.getMinecraftVersion() + " WILL NOT BE SUPPORTED!", e);
         }
+
+        try {
+            Class.forName("org.geysermc.geyser.util.MinecraftAuthLogger");
+
+            event.extensionManager().disable(this);
+            throw new RuntimeException("YOUR GEYSER VERSION IS OUTDATED AND NO LONGER SUPPORTED, PLEASE USE AN OLDER VERSION OF GEYSERREVERSION OR UPDATE GEYSER!");
+        } catch (ClassNotFoundException ignored) {
+        }
     }
 
     // Fucking hell.
