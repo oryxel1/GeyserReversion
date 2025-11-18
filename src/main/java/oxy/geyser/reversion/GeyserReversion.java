@@ -75,7 +75,7 @@ public class GeyserReversion implements Extension {
             Class.forName("org.geysermc.geyser.util.MinecraftAuthLogger");
 
             event.extensionManager().disable(this);
-            throw new RuntimeException("YOUR GEYSER VERSION IS OUTDATED AND NO LONGER SUPPORTED, PLEASE USE AN OLDER VERSION OF GEYSERREVERSION OR UPDATE GEYSER!");
+            throw new RuntimeException("YOUR GEYSER VERSION IS OUTDATED, PLEASE UPDATE!");
         } catch (ClassNotFoundException ignored) {
         }
     }
