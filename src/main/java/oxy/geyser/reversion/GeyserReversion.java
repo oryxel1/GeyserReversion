@@ -23,7 +23,7 @@ import org.geysermc.geyser.api.event.lifecycle.GeyserPostInitializeEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserPreInitializeEvent;
 import org.geysermc.geyser.api.extension.Extension;
 import org.geysermc.geyser.api.extension.ExtensionLogger;
-import org.geysermc.geyser.configuration.GeyserConfiguration;
+import org.geysermc.geyser.configuration.GeyserConfig;
 import org.geysermc.geyser.network.netty.Bootstraps;
 import org.geysermc.geyser.network.netty.GeyserServer;
 import org.geysermc.geyser.network.netty.handler.RakConnectionRequestHandler;
@@ -72,11 +72,10 @@ public class GeyserReversion implements Extension {
         }
 
         try {
-            Class.forName("org.geysermc.geyser.util.MinecraftAuthLogger");
-
-            event.extensionManager().disable(this);
-            throw new RuntimeException("YOUR GEYSER VERSION IS OUTDATED, PLEASE UPDATE!");
+            Class.forName("org.geysermc.geyser.configuration.GeyserConfig");
         } catch (ClassNotFoundException ignored) {
+            event.extensionManager().disable(this);
+            throw new RuntimeException("YOUR GEYSER VERSION IS OUTDATED AND NO LONGER SUPPORTED, PLEASE UPDATE!");
         }
     }
 
@@ -109,7 +108,7 @@ public class GeyserReversion implements Extension {
                 .channelFactory(RakChannelFactory.server(TRANSPORT.datagramChannelClass()))
                 .group(group, childGroup)
                 .option(RakChannelOption.RAK_HANDLE_PING, true)
-                .option(RakChannelOption.RAK_MAX_MTU, geyser.getConfig().getMtu())
+                .option(RakChannelOption.RAK_MAX_MTU, geyser.config().advanced().bedrock().mtu())
                 .option(RakChannelOption.RAK_PACKET_LIMIT, rakPacketLimit)
                 .option(RakChannelOption.RAK_GLOBAL_PACKET_LIMIT, rakGlobalPacketLimit)
                 .option(RakChannelOption.RAK_SEND_COOKIE, rakSendCookie)
@@ -120,10 +119,10 @@ public class GeyserReversion implements Extension {
         final Field field = GeyserServer.class.getDeclaredField("bootstrapFutures");
         field.setAccessible(true);
 
-        final GeyserConfiguration config = geyser.getConfig();
+        final GeyserConfig config = geyser.config();
         final ChannelFuture[] futures = (ChannelFuture[]) field.get(geyser.getGeyserServer());
         for (int i = 0; i < futures.length; i++) {
-            ChannelFuture future = bootstrap.bind(new InetSocketAddress(config.getBedrock().address(), config.getBedrock().port()));
+            ChannelFuture future = bootstrap.bind(new InetSocketAddress(config.bedrock().address(), config.bedrock().port()));
             modifyHandlers(future);
             futures[i] = future;
         }
@@ -151,12 +150,12 @@ public class GeyserReversion implements Extension {
                 .addAfter(RakServerOfflineHandler.NAME, RakPingHandler.NAME, new RakPingHandler(GeyserImpl.getInstance().getGeyserServer()));
 
         // Add proxy handler
-        boolean isProxyProtocol = GeyserImpl.getInstance().getConfig().getBedrock().isEnableProxyProtocol();
+        boolean isProxyProtocol = GeyserImpl.getInstance().config().advanced().bedrock().useHaproxyProtocol();
         if (isProxyProtocol) {
             channel.pipeline().addFirst("proxy-protocol-decoder", new ProxyServerHandler());
         }
 
-        boolean isWhitelistedProxyProtocol = isProxyProtocol && !GeyserImpl.getInstance().getConfig().getBedrock().getProxyProtocolWhitelistedIPs().isEmpty();
+        boolean isWhitelistedProxyProtocol = isProxyProtocol && !GeyserImpl.getInstance().config().advanced().bedrock().haproxyProtocolWhitelistedIps().isEmpty();
         if (Boolean.parseBoolean(System.getProperty("Geyser.RakRateLimitingDisabled", "false")) || isWhitelistedProxyProtocol) {
             // We would already block any non-whitelisted IP addresses in onConnectionRequest so we can remove the rate limiter
             channel.pipeline().remove(RakServerRateLimiter.NAME);

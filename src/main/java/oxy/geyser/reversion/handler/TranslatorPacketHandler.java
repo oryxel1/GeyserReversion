@@ -121,7 +121,7 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             resourcePacksInfo.getResourcePackInfos().addAll(this.resourcePackLoadEvent.infoPacketEntries());
             resourcePacksInfo.setVibrantVisualsForceDisabled(!session.isAllowVibrantVisuals());
 
-            resourcePacksInfo.setForcedToAccept(GeyserImpl.getInstance().getConfig().isForceResourcePacks());
+            resourcePacksInfo.setForcedToAccept(GeyserImpl.getInstance().config().gameplay().forceResourcePacks());
             resourcePacksInfo.setWorldTemplateId(UUID.randomUUID());
             resourcePacksInfo.setWorldTemplateVersion("*");
             session.sendUpstreamPacket(resourcePacksInfo);

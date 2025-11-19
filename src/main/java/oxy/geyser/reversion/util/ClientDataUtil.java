@@ -60,7 +60,7 @@ public class ClientDataUtil {
                 startEncryptionHandshake(session, identityPublicKey);
             } catch (Throwable e) {
                 // An error can be thrown on older Java 8 versions about an invalid key
-                if (geyser.getConfig().isDebugMode()) {
+                if (geyser.config().debugMode()) {
                     e.printStackTrace();
                 }
 

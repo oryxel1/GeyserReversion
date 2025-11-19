@@ -58,7 +58,7 @@ public class PendingBedrockAuthentication {
             .build(new CacheLoader<>() {
                     @Override
                     public AuthenticationTask load(@NonNull String userKey) {
-                        return new AuthenticationTask(userKey, GeyserImpl.getInstance().getConfig().getPendingAuthenticationTimeout());
+                        return new AuthenticationTask(userKey, GeyserImpl.getInstance().config().pendingAuthenticationTimeout());
                     }
         });
     }
