@@ -26,6 +26,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.0")
+    implementation("org.yaml:snakeyaml:2.2")
 
     implementation("net.lenni0451.classtransform:core:1.14.1")
     implementation("net.lenni0451:Reflect:1.5.0")
@@ -38,6 +39,7 @@ shadowJar {
         include(dependency("com.fasterxml.jackson.core:jackson-annotations:2.17.0"))
         include(dependency("com.fasterxml.jackson.core:jackson-core:2.17.0"))
         include(dependency("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.0"))
+        include(dependency("org.yaml:snakeyaml:2.2"))
 
         include(dependency("net.lenni0451.classtransform:core:1.14.1"))
         include(dependency("net.lenni0451:Reflect:1.5.0"))
@@ -49,6 +51,7 @@ shadowJar {
     }
 
     relocate("com.fasterxml.jackson", "oxy.geyser.reversion.shaded.jackson")
+    relocate('org.yaml.snakeyaml', 'oxy.geyser.reversion.shaded.yaml')
     relocate('org.objectweb.asm', 'oxy.geyser.reversion.shaded.asm')
     relocate('net.lenni0451.reflect', 'oxy.geyser.reversion.shaded.reflect')
     relocate('net.lenni0451.classtransform', 'oxy.geyser.reversion.shaded.classtransform')
