@@ -7,6 +7,7 @@ import lombok.NonNull;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
+import org.cloudburstmc.protocol.bedrock.packet.StartGamePacket;
 import org.geysermc.geyser.session.UpstreamSession;
 import oxy.geyser.reversion.GeyserReversion;
 import oxy.geyser.reversion.session.GeyserTranslatedUser;
@@ -31,6 +32,8 @@ public final class TranslatorSendListener extends UpstreamSession {
     public void sendPacket(@NonNull BedrockPacket packet) {
         if (packet instanceof ItemComponentPacket) {
             RegistryUtil.onItemComponent(this.user, (ItemComponentPacket) packet);
+        } else if (packet instanceof StartGamePacket startGamePacket) {
+            startGamePacket.getBlockProperties().clear(); // TODO: Add support for custom blocks.
         }
 
         if (this.user != null) {
