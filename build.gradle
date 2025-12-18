@@ -14,7 +14,7 @@ repositories {
 
 
 dependencies {
-    compileOnly("org.geysermc.geyser:core:2.9.0-SNAPSHOT") {
+    compileOnly("org.geysermc.geyser:core:2.9.2-SNAPSHOT") {
         exclude group: "com.google.code.gson", module: "gson"
     }
     compileOnly("org.projectlombok:lombok:1.18.36")

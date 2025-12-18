@@ -17,6 +17,7 @@ import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerOfflineHandle
 import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerRateLimiter;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.v818.Bedrock_v818;
+import org.cloudburstmc.protocol.bedrock.codec.v844.Bedrock_v844;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserPostInitializeEvent;
@@ -49,7 +50,7 @@ import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_PACKET_
 public class GeyserReversion implements Extension {
     public static ExtensionLogger LOGGER;
 
-    public static BedrockCodec OLDEST_GEYSER_CODEC = CodecUtil.rebuildCodec(Bedrock_v818.CODEC);
+    public static BedrockCodec OLDEST_GEYSER_CODEC = CodecUtil.rebuildCodec(Bedrock_v844.CODEC);
 
     private static final TransportHelper.TransportType TRANSPORT = TransportHelper.TRANSPORT_TYPE;
 
@@ -71,12 +72,12 @@ public class GeyserReversion implements Extension {
             throw new RuntimeException("CODE INJECTION FAILED! ANY VERSION BELOW " + Bedrock_v575.CODEC.getMinecraftVersion() + " WILL NOT BE SUPPORTED!", e);
         }
 
-        try {
-            Class.forName("org.geysermc.geyser.configuration.GeyserConfig");
-        } catch (ClassNotFoundException ignored) {
-            event.extensionManager().disable(this);
-            throw new RuntimeException("YOUR GEYSER VERSION IS OUTDATED AND NO LONGER SUPPORTED, PLEASE UPDATE!");
-        }
+//        try {
+//            Class.forName("org.geysermc.geyser.configuration.GeyserConfig");
+//        } catch (ClassNotFoundException ignored) {
+//            event.extensionManager().disable(this);
+//            throw new RuntimeException("YOUR GEYSER VERSION IS OUTDATED AND NO LONGER SUPPORTED, PLEASE UPDATE!");
+//        }
     }
 
     // Fucking hell.

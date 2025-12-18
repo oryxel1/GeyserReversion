@@ -203,6 +203,8 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             geyser.getSessionManager().addPendingSession(this.session);
             geyser.eventBus().fire(new SessionInitializeEvent(this.session));
 
+            session.sendMessage("Authenticating in the server as " + token.getDisplayName());
+
             this.user.setAuthenticated(true);
             this.session.authenticate(session.getAuthData().name());
             return true;
