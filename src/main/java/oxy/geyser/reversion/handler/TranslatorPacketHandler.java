@@ -43,6 +43,11 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
     private int clientProtocol = -1;
     @Override
     public PacketSignal handle(RequestNetworkSettingsPacket packet) {
+        if (GameProtocol.getBedrockCodec(packet.getProtocolVersion()) != null) {
+            super.handle(packet);
+            return PacketSignal.HANDLED;
+        }
+
         if (checkCodec(packet.getProtocolVersion())) {
             return PacketSignal.HANDLED;
         }
@@ -65,6 +70,11 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
 
     @Override
     public PacketSignal handle(LoginPacket packet) {
+        if (GameProtocol.getBedrockCodec(packet.getProtocolVersion()) != null) {
+            super.handle(packet);
+            return PacketSignal.HANDLED;
+        }
+
         if (this.clientProtocol == -1) { // Older versions don't send RequestNetworkSettingsPacket, handle it ourselves!
             this.clientProtocol = packet.getProtocolVersion();
         }
