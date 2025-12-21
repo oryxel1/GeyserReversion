@@ -32,8 +32,6 @@ public final class TranslatorSendListener extends UpstreamSession {
     public void sendPacket(@NonNull BedrockPacket packet) {
         if (packet instanceof ItemComponentPacket) {
             RegistryUtil.onItemComponent(this.user, (ItemComponentPacket) packet);
-        } else if (packet instanceof StartGamePacket startGamePacket) {
-            startGamePacket.getBlockProperties().clear(); // TODO: Add support for custom blocks.
         }
 
         if (this.user != null) {

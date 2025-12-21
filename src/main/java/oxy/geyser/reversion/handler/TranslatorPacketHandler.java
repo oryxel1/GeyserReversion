@@ -52,28 +52,18 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             return PacketSignal.HANDLED;
         }
 
-        final boolean needTranslation = GameProtocol.getBedrockCodec(this.clientProtocol) == null;
-        if (needTranslation) {
-            packet.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
-        }
-
+        packet.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
         super.handle(packet);
-
-        if (needTranslation) {
-            session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
-        }
+        session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
 
         return PacketSignal.HANDLED;
     }
 
     @Override
     public PacketSignal handle(LoginPacket packet) {
+        this.clientProtocol = packet.getProtocolVersion();
         if (GameProtocol.getBedrockCodec(packet.getProtocolVersion()) != null) {
             return super.handle(packet);
-        }
-
-        if (this.clientProtocol == -1) { // Older versions don't send RequestNetworkSettingsPacket, handle it ourselves!
-            this.clientProtocol = packet.getProtocolVersion();
         }
 
         final int pv = packet.getProtocolVersion();
@@ -81,12 +71,10 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             return PacketSignal.HANDLED;
         }
 
-        if (GameProtocol.getBedrockCodec(pv) == null) {
-            this.user = new GeyserTranslatedUser(pv, GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion(), this.session);
-            packet.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
-            session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
-            GeyserUtil.hook(session);
-        }
+        this.user = new GeyserTranslatedUser(pv, GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion(), this.session);
+        packet.setProtocolVersion(GeyserReversion.OLDEST_GEYSER_CODEC.getProtocolVersion());
+        session.getUpstream().getSession().setCodec(DuplicatedProtocolInfo.getPacketCodec(this.clientProtocol));
+        GeyserUtil.hook(session);
 
         // The player is using the version before authentication change, damn it. Let's handle this ourselves...
         if (this.clientProtocol < Bedrock_v589.CODEC.getProtocolVersion()) {
