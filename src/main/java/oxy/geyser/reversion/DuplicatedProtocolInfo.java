@@ -1,6 +1,5 @@
 package oxy.geyser.reversion;
 
-import com.github.blackjack200.ouranos.data.bedrock.GlobalItemDataHandlers;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.v361.Bedrock_v361;
@@ -31,6 +30,7 @@ import org.cloudburstmc.protocol.bedrock.codec.v567.Bedrock_v567;
 import org.cloudburstmc.protocol.bedrock.codec.v568.Bedrock_v568;
 import org.cloudburstmc.protocol.bedrock.codec.v575.Bedrock_v575;
 import org.cloudburstmc.protocol.bedrock.codec.v582.Bedrock_v582;
+import org.cloudburstmc.protocol.bedrock.codec.v589.Bedrock_v589;
 import org.cloudburstmc.protocol.bedrock.codec.v594.Bedrock_v594;
 import org.cloudburstmc.protocol.bedrock.codec.v618.Bedrock_v618;
 import org.cloudburstmc.protocol.bedrock.codec.v622.Bedrock_v622;
@@ -71,66 +71,85 @@ public class DuplicatedProtocolInfo {
         return null;
     }
 
-    public static void addPacketCodec(BedrockCodec packetCodec, int schemaId) {
+    public static void addPacketCodec(BedrockCodec packetCodec) {
         BedrockCodecHelper helper = packetCodec.createHelper();
         helper.setEncodingSettings(EncodingSettings.builder().maxListSize(Integer.MAX_VALUE).maxByteArraySize(Integer.MAX_VALUE).maxNetworkNBTSize(Integer.MAX_VALUE).maxItemNBTSize(Integer.MAX_VALUE).maxStringLength(Integer.MAX_VALUE).build());
         PACKET_CODECS.add(packetCodec.toBuilder().helper(() -> helper).build());
-        GlobalItemDataHandlers.SCHEMA_ID.put(packetCodec.getProtocolVersion(), schemaId);
-    }
-
-    public static Set<BedrockCodec> getPacketCodecs() {
-        return UNMODIFIABLE_PACKET_CODECS;
     }
 
     static {
         UNMODIFIABLE_PACKET_CODECS = Collections.unmodifiableSet(PACKET_CODECS);
-        addPacketCodec(Bedrock_v844.CODEC, 241);
-        addPacketCodec(Bedrock_v827.CODEC, 241);
-        addPacketCodec(Bedrock_v819.CODEC, 231);
-        addPacketCodec(Bedrock_v818.CODEC, 231);
-        addPacketCodec(Bedrock_v800.CODEC, 231);
-        addPacketCodec(Bedrock_v786.CODEC, 231);
-        addPacketCodec(Bedrock_v776.CODEC, 231);
-        addPacketCodec(Bedrock_v766.CODEC, 231);
-        addPacketCodec(Bedrock_v748.CODEC, 221);
-        addPacketCodec(Bedrock_v729.CODEC, 211);
-        addPacketCodec(Bedrock_v712.CODEC, 201);
-        addPacketCodec(Bedrock_v686.CODEC, 201);
-        addPacketCodec(Bedrock_v685.CODEC, 191);
-        addPacketCodec(Bedrock_v671.CODEC, 181);
-        addPacketCodec(Bedrock_v662.CODEC, 171);
-        addPacketCodec(Bedrock_v649.CODEC, 161);
-        addPacketCodec(Bedrock_v630.CODEC, 151);
-        addPacketCodec(Bedrock_v622.CODEC, 141);
-        addPacketCodec(Bedrock_v618.CODEC, 131);
-        addPacketCodec(Bedrock_v594.CODEC, 121);
-        addPacketCodec(Bedrock_v582.CODEC, 101);
-        addPacketCodec(Bedrock_v575.CODEC, 91);
-        addPacketCodec(Bedrock_v568.CODEC, 81);
-        addPacketCodec(Bedrock_v567.CODEC, 81);
-        addPacketCodec(Bedrock_v560.CODEC, 81);
-        addPacketCodec(Bedrock_v557.CODEC, 81);
-        addPacketCodec(Bedrock_v554.CODEC, 81);
-        addPacketCodec(Bedrock_v545.CODEC, 71);
-        addPacketCodec(Bedrock_v544.CODEC, 71);
-        addPacketCodec(Bedrock_v534.CODEC, 71);
-        addPacketCodec(Bedrock_v527.CODEC, 71);
-        addPacketCodec(Bedrock_v503.CODEC, 71);
-        addPacketCodec(Bedrock_v486.CODEC, 61);
-        addPacketCodec(Bedrock_v475.CODEC, 51);
-        addPacketCodec(Bedrock_v471.CODEC, 41);
-        addPacketCodec(Bedrock_v465.CODEC, 31);
-        addPacketCodec(Bedrock_v448.CODEC, 31);
-        addPacketCodec(Bedrock_v440.CODEC, 31);
-        addPacketCodec(Bedrock_v431.CODEC, 31);
-        addPacketCodec(Bedrock_v428.CODEC, 31);
-        addPacketCodec(Bedrock_v422.CODEC, 31);
-        addPacketCodec(Bedrock_v419.CODEC, 21);
-        addPacketCodec(Bedrock_v408.CODEC, 11);
-        addPacketCodec(Bedrock_v407.CODEC, 11);
-        addPacketCodec(Bedrock_v390.CODEC, 11);
-        addPacketCodec(Bedrock_v389.CODEC, 11);
-        addPacketCodec(Bedrock_v388.CODEC, 11);
-        addPacketCodec(Bedrock_v361.CODEC, 11);
+
+        // 1.21-1.21.111
+        addPacketCodec(Bedrock_v844.CODEC);
+        addPacketCodec(Bedrock_v827.CODEC);
+        addPacketCodec(Bedrock_v819.CODEC);
+        addPacketCodec(Bedrock_v818.CODEC);
+        addPacketCodec(Bedrock_v800.CODEC);
+        addPacketCodec(Bedrock_v786.CODEC);
+        addPacketCodec(Bedrock_v776.CODEC);
+        addPacketCodec(Bedrock_v766.CODEC);
+        addPacketCodec(Bedrock_v748.CODEC);
+        addPacketCodec(Bedrock_v729.CODEC);
+        addPacketCodec(Bedrock_v712.CODEC);
+        addPacketCodec(Bedrock_v686.CODEC);
+        addPacketCodec(Bedrock_v685.CODEC);
+
+        // 1.20.x
+        addPacketCodec(Bedrock_v671.CODEC);
+        addPacketCodec(Bedrock_v662.CODEC);
+        addPacketCodec(Bedrock_v649.CODEC);
+        addPacketCodec(Bedrock_v630.CODEC);
+        addPacketCodec(Bedrock_v622.CODEC);
+        addPacketCodec(Bedrock_v618.CODEC);
+        addPacketCodec(Bedrock_v594.CODEC);
+        addPacketCodec(Bedrock_v589.CODEC);
+
+        // 1.19.x
+        addPacketCodec(Bedrock_v582.CODEC);
+        addPacketCodec(Bedrock_v575.CODEC);
+        addPacketCodec(Bedrock_v568.CODEC);
+        addPacketCodec(Bedrock_v567.CODEC);
+
+        addPacketCodec(Bedrock_v560.CODEC);
+
+        addPacketCodec(Bedrock_v557.CODEC);
+        addPacketCodec(Bedrock_v554.CODEC);
+
+        addPacketCodec(Bedrock_v545.CODEC);
+        addPacketCodec(Bedrock_v544.CODEC);
+        addPacketCodec(Bedrock_v534.CODEC);
+        addPacketCodec(Bedrock_v527.CODEC);
+
+        // 1.18.x
+        addPacketCodec(Bedrock_v503.CODEC);
+        addPacketCodec(Bedrock_v486.CODEC);
+        addPacketCodec(Bedrock_v475.CODEC);
+
+        // 1.17.x
+        addPacketCodec(Bedrock_v471.CODEC);
+        addPacketCodec(Bedrock_v465.CODEC);
+        addPacketCodec(Bedrock_v448.CODEC);
+        addPacketCodec(Bedrock_v440.CODEC);
+
+        // 1.16.x
+        addPacketCodec(Bedrock_v431.CODEC);
+        addPacketCodec(Bedrock_v428.CODEC);
+        addPacketCodec(Bedrock_v422.CODEC);
+        addPacketCodec(Bedrock_v419.CODEC);
+
+        //1.16.40 partially playable
+        addPacketCodec(Bedrock_v408.CODEC);
+        addPacketCodec(Bedrock_v407.CODEC);
+
+        // 1.14.x partially playable
+        addPacketCodec(Bedrock_v390.CODEC);
+        addPacketCodec(Bedrock_v389.CODEC);
+
+        // 1.13.0 partially playable
+        addPacketCodec(Bedrock_v388.CODEC);
+
+        // 1.12.0 partially playable
+        addPacketCodec(Bedrock_v361.CODEC);
     }
 }
