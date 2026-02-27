@@ -115,7 +115,7 @@ public class GeyserReversion implements Extension {
                 .option(RakChannelOption.RAK_SEND_COOKIE, rakSendCookie)
                 .childHandler(serverInitializer);
 
-        Bootstraps.setupBootstrap(bootstrap);
+        Bootstraps.setupBootstrap(bootstrap, TransportHelper.TRANSPORT_TYPE);
 
         final Field field = GeyserServer.class.getDeclaredField("bootstrapFutures");
         field.setAccessible(true);

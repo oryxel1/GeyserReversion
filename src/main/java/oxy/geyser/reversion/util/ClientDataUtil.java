@@ -33,7 +33,7 @@ public class ClientDataUtil {
             long issuedAt = rawIssuedAt != null ? rawIssuedAt : -1;
 
             ChainValidationResult.IdentityData extraData = result.identityClaims().extraData;
-            session.setAuthData(new AuthData(extraData.displayName, extraData.identity, extraData.xuid, issuedAt));
+            session.setAuthData(new AuthData(extraData.displayName, extraData.identity, extraData.xuid, issuedAt, extraData.minecraftId));
             if (packet.getAuthPayload() instanceof TokenPayload tokenPayload) {
                 session.setToken(tokenPayload.getToken());
             } else if (packet.getAuthPayload() instanceof CertificateChainPayload certificateChainPayload) {

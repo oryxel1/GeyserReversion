@@ -203,7 +203,8 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
             this.session.sendUpstreamPacket(new ClientboundCloseFormPacket()); // Send again this just in case...
 
             MinecraftMultiplayerToken token = result.getMinecraftMultiplayerToken().getCached();
-            this.session.setAuthData(new AuthData(token.getDisplayName(), token.getUuid(), token.getXuid(), this.session.getAuthData().issuedAt()));
+            this.session.setAuthData(new AuthData(token.getDisplayName(),
+                    token.getUuid(), token.getXuid(), this.session.getAuthData().issuedAt(), result.getPlayFabToken().getCached().getPlayFabId()));
             geyser.getSessionManager().addPendingSession(this.session);
             geyser.eventBus().fire(new SessionInitializeEvent(this.session));
 
