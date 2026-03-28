@@ -1,5 +1,6 @@
 package oxy.geyser.reversion;
 
+import com.github.blackjack200.ouranos.ProtocolInfo;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.v361.Bedrock_v361;
@@ -51,6 +52,11 @@ import org.cloudburstmc.protocol.bedrock.codec.v818.Bedrock_v818;
 import org.cloudburstmc.protocol.bedrock.codec.v819.Bedrock_v819;
 import org.cloudburstmc.protocol.bedrock.codec.v827.Bedrock_v827;
 import org.cloudburstmc.protocol.bedrock.codec.v844.Bedrock_v844;
+import org.cloudburstmc.protocol.bedrock.codec.v859.Bedrock_v859;
+import org.cloudburstmc.protocol.bedrock.codec.v860.Bedrock_v860;
+import org.cloudburstmc.protocol.bedrock.codec.v898.Bedrock_v898;
+import org.cloudburstmc.protocol.bedrock.codec.v924.Bedrock_v924;
+import org.cloudburstmc.protocol.bedrock.codec.v944.Bedrock_v944;
 import org.cloudburstmc.protocol.bedrock.data.EncodingSettings;
 
 import java.util.Set;
@@ -76,7 +82,14 @@ public class DuplicatedProtocolInfo {
     }
 
     static {
-        // 1.21-1.21.111
+        // 26.x
+        addPacketCodec(Bedrock_v944.CODEC);
+        addPacketCodec(Bedrock_v924.CODEC);
+
+        // 1.21.x
+        addPacketCodec(Bedrock_v898.CODEC);
+        addPacketCodec(Bedrock_v860.CODEC);
+        addPacketCodec(Bedrock_v859.CODEC);
         addPacketCodec(Bedrock_v844.CODEC);
         addPacketCodec(Bedrock_v827.CODEC);
         addPacketCodec(Bedrock_v819.CODEC);
