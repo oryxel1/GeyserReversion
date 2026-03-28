@@ -14,13 +14,13 @@ repositories {
 
 
 dependencies {
-    compileOnly("org.geysermc.geyser:core:2.9.4-SNAPSHOT") {
+    compileOnly("org.geysermc.geyser:core:2.9.5-SNAPSHOT") {
         exclude group: "com.google.code.gson", module: "gson"
     }
     compileOnly("org.projectlombok:lombok:1.18.36")
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
-    // Honestly it's not ideal to use an jar file directly, but eh this is convenient for me, and yes I know jitpack exist.
+    // Honestly it's not ideal to use an jar file directly, but eh this is convenient for me.
     implementation(files("libs/ouranos-1.0-all.jar"))
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")

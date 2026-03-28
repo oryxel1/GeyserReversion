@@ -13,11 +13,13 @@ import net.lenni0451.classtransform.TransformerManager;
 import net.lenni0451.reflect.Agents;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
+import org.cloudburstmc.netty.channel.raknet.config.RakServerCookieMode;
 import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerOfflineHandler;
 import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerRateLimiter;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.v818.Bedrock_v818;
 import org.cloudburstmc.protocol.bedrock.codec.v844.Bedrock_v844;
+import org.cloudburstmc.protocol.bedrock.codec.v944.Bedrock_v944;
 import org.geysermc.event.subscribe.Subscribe;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserPostInitializeEvent;
@@ -50,7 +52,7 @@ import static org.cloudburstmc.netty.channel.raknet.RakConstants.DEFAULT_PACKET_
 public class GeyserReversion implements Extension {
     public static ExtensionLogger LOGGER;
 
-    public static BedrockCodec OLDEST_GEYSER_CODEC = CodecUtil.rebuildCodec(Bedrock_v844.CODEC);
+    public static BedrockCodec OLDEST_GEYSER_CODEC = CodecUtil.rebuildCodec(Bedrock_v944.CODEC);
 
     private static final TransportHelper.TransportType TRANSPORT = TransportHelper.TRANSPORT_TYPE;
 
@@ -112,7 +114,7 @@ public class GeyserReversion implements Extension {
                 .option(RakChannelOption.RAK_MAX_MTU, geyser.config().advanced().bedrock().mtu())
                 .option(RakChannelOption.RAK_PACKET_LIMIT, rakPacketLimit)
                 .option(RakChannelOption.RAK_GLOBAL_PACKET_LIMIT, rakGlobalPacketLimit)
-                .option(RakChannelOption.RAK_SEND_COOKIE, rakSendCookie)
+                .option(RakChannelOption.RAK_SERVER_COOKIE_MODE, rakSendCookie ? RakServerCookieMode.ACTIVE : RakServerCookieMode.INVALID)
                 .childHandler(serverInitializer);
 
         Bootstraps.setupBootstrap(bootstrap, TransportHelper.TRANSPORT_TYPE);
