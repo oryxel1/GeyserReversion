@@ -33,6 +33,8 @@ dependencies {
 }
 
 shadowJar {
+    archiveFileName = "geyserreversion.jar"
+
     dependencies {
         include(dependency(files("libs/ouranos-1.0-all.jar")))
         include(dependency("com.fasterxml.jackson.core:jackson-databind:2.17.0"))
