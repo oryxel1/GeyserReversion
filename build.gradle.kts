@@ -64,7 +64,7 @@ tasks.shadowJar {
 
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
-    versionNumber.set(project.version.toString() + "-" + System.getenv("BUILD_NUMBER"))
+    versionNumber.set("Build " + System.getenv("BUILD_NUMBER"))
     projectId = "geyserreversion"
     versionType = "alpha"
     uploadFile.set(tasks.getByPath("shadowJar"))
