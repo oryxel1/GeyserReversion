@@ -172,6 +172,14 @@ public final class TranslatorPacketHandler extends UpstreamPacketHandler {
     }
 
     private void authenticate() {
+        if (!session.getGeyser().config().advanced().bedrock().validateBedrockLogin()) {
+            geyser.getSessionManager().addPendingSession(this.session);
+            geyser.eventBus().fire(new SessionInitializeEvent(this.session));
+            this.user.setAuthenticated(true);
+            this.session.authenticate(session.getAuthData().name());
+            return;
+        }
+
         // This just looks cool - idk
         // Yes it does! (oxy)
         SetTimePacket packet = new SetTimePacket();
