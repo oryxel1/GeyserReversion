@@ -64,9 +64,10 @@ tasks.shadowJar {
 
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
-    versionNumber.set("Build " + System.getenv("BUILD_NUMBER"))
+    versionName.set("Build " + System.getenv("BUILD_NUMBER"))
+    versionNumber.set(System.getenv("BUILD_NUMBER"))
     projectId = "geyserreversion"
-    versionType = "alpha"
+    versionType = "release"
     uploadFile.set(tasks.getByPath("shadowJar"))
 
     var releaseNotes = rootProject.file("release_notes.md")
