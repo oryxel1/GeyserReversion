@@ -94,7 +94,7 @@ public class ReversionUpstreamHandler extends UpstreamPacketHandler {
             return PacketSignal.HANDLED;
         }
 
-        if (user.getProtocolId() >= Bedrock_v589.CODEC.getProtocolVersion()
+        if (user == null || user.getProtocolId() >= Bedrock_v589.CODEC.getProtocolVersion()
                 || packet.getStatus() != ResourcePackClientResponsePacket.Status.COMPLETED
                 || !session.getGeyser().config().advanced().bedrock().validateBedrockLogin()
         ) {
