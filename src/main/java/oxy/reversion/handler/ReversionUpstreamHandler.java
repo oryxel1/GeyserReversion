@@ -34,6 +34,10 @@ public class ReversionUpstreamHandler extends UpstreamPacketHandler {
 
     @Override
     public PacketSignal handle(RequestNetworkSettingsPacket packet) {
+        if (GameProtocol.getBedrockCodec(packet.getProtocolVersion()) != null) {
+            return super.handle(packet);
+        }
+
         session.getUpstream().getSession().setCodec(ProtocolSet.getPacketCodec(packet.getProtocolVersion()));
         PacketCompressionAlgorithm algorithm = PacketCompressionAlgorithm.ZLIB;
 
