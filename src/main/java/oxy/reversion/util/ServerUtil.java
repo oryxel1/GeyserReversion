@@ -9,20 +9,18 @@ import io.netty.util.NettyRuntime;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
+import org.cloudburstmc.netty.channel.raknet.config.DefaultRakServerThrottle;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.channel.raknet.config.RakServerCookieMode;
 import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerOfflineHandler;
-import org.cloudburstmc.netty.handler.codec.raknet.server.RakServerRateLimiter;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.configuration.GeyserConfig;
 import org.geysermc.geyser.network.netty.Bootstraps;
 import org.geysermc.geyser.network.netty.GeyserServer;
 import org.geysermc.geyser.network.netty.handler.RakConnectionRequestHandler;
-import org.geysermc.geyser.network.netty.handler.RakGeyserRateLimiter;
 import org.geysermc.geyser.network.netty.handler.RakPingHandler;
-import org.geysermc.geyser.network.netty.proxy.ProxyServerHandler;
 import org.geysermc.mcprotocollib.network.helper.TransportHelper;
-import oxy.reversion.util.Initializer.CustomServerInitializer;
+import oxy.reversion.util.initializer.CustomServerInitializer;
 
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
@@ -51,6 +49,13 @@ public class ServerUtil {
         int rakGlobalPacketLimit = positivePropOrDefault("Geyser.RakGlobalPacketLimit", DEFAULT_GLOBAL_PACKET_LIMIT);
         boolean rakSendCookie = Boolean.parseBoolean(System.getProperty("Geyser.RakSendCookie", "true"));
 
+        int maxConnectionsPerAddress =  positivePropOrDefault("Geyser.MaxConnectionsPerAddress", 10);
+
+        boolean rakRateLimitingDisabled = Boolean.parseBoolean(System.getProperty(
+                "Geyser.RakRateLimitingDisabled",
+                Boolean.toString(geyser.config().advanced().bedrock().useWaterdogpeForwarding())
+        ));
+
         CustomServerInitializer serverInitializer = new CustomServerInitializer(geyser, rakSendCookie);
 
         ServerBootstrap bootstrap = new ServerBootstrap()
@@ -58,8 +63,10 @@ public class ServerUtil {
                 .group(group, childGroup)
                 .option(RakChannelOption.RAK_HANDLE_PING, true)
                 .option(RakChannelOption.RAK_MAX_MTU, geyser.config().advanced().bedrock().mtu())
-                .option(RakChannelOption.RAK_PACKET_LIMIT, rakPacketLimit)
+                .option(RakChannelOption.RAK_PACKET_LIMIT, rakRateLimitingDisabled ? 0 : rakPacketLimit)
                 .option(RakChannelOption.RAK_GLOBAL_PACKET_LIMIT, rakGlobalPacketLimit)
+                .option(RakChannelOption.RAK_PROXY_PROTOCOL, geyser.config().advanced().bedrock().useHaproxyProtocol())
+                .option(RakChannelOption.RAK_THROTTLE, rakRateLimitingDisabled ? null : new DefaultRakServerThrottle(maxConnectionsPerAddress, 4_000, 3))
                 .option(RakChannelOption.RAK_SERVER_COOKIE_MODE, rakSendCookie ? RakServerCookieMode.ACTIVE : RakServerCookieMode.INVALID)
                 .childHandler(serverInitializer);
 
@@ -103,21 +110,6 @@ public class ServerUtil {
             channel.pipeline()
                     .addFirst(RakConnectionRequestHandler.NAME, new RakConnectionRequestHandler(GeyserImpl.getInstance().getGeyserServer()))
                     .addAfter(RakServerOfflineHandler.NAME, RakPingHandler.NAME, new RakPingHandler(GeyserImpl.getInstance().getGeyserServer()));
-
-            // Add proxy handler
-            boolean isProxyProtocol = GeyserImpl.getInstance().config().advanced().bedrock().useHaproxyProtocol();
-            if (isProxyProtocol) {
-                channel.pipeline().addFirst("proxy-protocol-decoder", new ProxyServerHandler());
-            }
-
-            boolean isWhitelistedProxyProtocol = isProxyProtocol && !GeyserImpl.getInstance().config().advanced().bedrock().haproxyProtocolWhitelistedIps().isEmpty();
-            if (Boolean.parseBoolean(System.getProperty("Geyser.RakRateLimitingDisabled", "false")) || isWhitelistedProxyProtocol) {
-                // We would already block any non-whitelisted IP addresses in onConnectionRequest so we can remove the rate limiter
-                channel.pipeline().remove(RakServerRateLimiter.NAME);
-            } else {
-                // Use our own rate limiter to allow multiple players from the same IP
-                channel.pipeline().replace(RakServerRateLimiter.NAME, RakGeyserRateLimiter.NAME, new RakGeyserRateLimiter(channel));
-            }
         });
     }
 

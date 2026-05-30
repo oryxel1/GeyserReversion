@@ -15,8 +15,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.geysermc.geyser:core:2.9.5-SNAPSHOT") {
+    compileOnly("org.geysermc.geyser:core:2.10.0-SNAPSHOT") {
         exclude(group = "com.google.code.gson", module = "gson")
+        exclude(group = "org.cloudburstmc.netty", module = "netty-transport-raknet")
     }
 
     compileOnly("org.projectlombok:lombok:1.18.36")
@@ -31,6 +32,8 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.17.0")
+
+    compileOnly("org.cloudburstmc.netty:netty-transport-raknet:1.1.0.CR1-SNAPSHOT")
 
     implementation(files("libs/ouranos-1.0-all.jar"))
 }

@@ -28,11 +28,6 @@ public class IncompleteLoginUtil {
             return null;
         }
 
-        if (geyser.getSessionManager().reachedMaxConnectionsPerAddress(session)) {
-            session.disconnect("Too many connections are originating from this location!");
-            return null;
-        }
-
         ClientDataUtil.setClientData(session, packet);
 
         if (session.isClosed()) {
